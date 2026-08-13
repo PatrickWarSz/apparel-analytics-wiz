@@ -21,7 +21,7 @@ export type Database = {
           match_key: string
           name: string
           sort_order: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -29,7 +29,7 @@ export type Database = {
           match_key?: string
           name: string
           sort_order?: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -37,7 +37,7 @@ export type Database = {
           match_key?: string
           name?: string
           sort_order?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -48,7 +48,7 @@ export type Database = {
           monthly_limit: number
           name: string
           sort_order: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -56,7 +56,7 @@ export type Database = {
           monthly_limit?: number
           name: string
           sort_order?: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -64,7 +64,7 @@ export type Database = {
           monthly_limit?: number
           name?: string
           sort_order?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -74,21 +74,21 @@ export type Database = {
           fabric_price_per_kg: number
           id: string
           label: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           fabric_price_per_kg?: number
           id?: string
           label: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           fabric_price_per_kg?: number
           id?: string
           label?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -100,7 +100,7 @@ export type Database = {
           name: string
           sort_order: number
           unit_price: number | null
-          user_id: string
+          user_id: string | null
           yield_per_kg: number | null
         }
         Insert: {
@@ -110,7 +110,7 @@ export type Database = {
           name: string
           sort_order?: number
           unit_price?: number | null
-          user_id: string
+          user_id?: string | null
           yield_per_kg?: number | null
         }
         Update: {
@@ -120,7 +120,7 @@ export type Database = {
           name?: string
           sort_order?: number
           unit_price?: number | null
-          user_id?: string
+          user_id?: string | null
           yield_per_kg?: number | null
         }
         Relationships: []
@@ -135,7 +135,7 @@ export type Database = {
           qty_adjusted: number | null
           qty_from_sets: number
           qty_sheet: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           company_id: string
@@ -146,7 +146,7 @@ export type Database = {
           qty_adjusted?: number | null
           qty_from_sets?: number
           qty_sheet?: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           company_id?: string
@@ -157,7 +157,7 @@ export type Database = {
           qty_adjusted?: number | null
           qty_from_sets?: number
           qty_sheet?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -185,7 +185,7 @@ export type Database = {
           shipment_id: string
           sort_order: number
           unit_price: number | null
-          user_id: string
+          user_id: string | null
           yield_per_kg: number | null
         }
         Insert: {
@@ -196,7 +196,7 @@ export type Database = {
           shipment_id: string
           sort_order?: number
           unit_price?: number | null
-          user_id: string
+          user_id?: string | null
           yield_per_kg?: number | null
         }
         Update: {
@@ -207,7 +207,7 @@ export type Database = {
           shipment_id?: string
           sort_order?: number
           unit_price?: number | null
-          user_id?: string
+          user_id?: string | null
           yield_per_kg?: number | null
         }
         Relationships: [
@@ -230,7 +230,7 @@ export type Database = {
           period_id: string
           sort_order: number
           title: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           company_id?: string | null
@@ -241,7 +241,7 @@ export type Database = {
           period_id: string
           sort_order?: number
           title?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           company_id?: string | null
@@ -252,7 +252,7 @@ export type Database = {
           period_id?: string
           sort_order?: number
           title?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

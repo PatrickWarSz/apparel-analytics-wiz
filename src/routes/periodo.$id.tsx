@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Copy, FileSpreadsheet, Plus, Trash2, Upload, Zap } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import {
   brl,
   effectiveQty,
@@ -149,7 +148,6 @@ function PeriodPage() {
 type Staged = ParsedSheet & { companyId: string | null };
 
 function Importer({ periodId, companies }: { periodId: string; companies: Company[] }) {
-  const { user } = useAuth();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [staged, setStaged] = useState<Staged[]>([]);
@@ -180,7 +178,6 @@ function Importer({ periodId, companies }: { periodId: string; companies: Compan
           .eq("period_id", periodId)
           .eq("company_id", sheet.companyId);
         const rows = Object.entries(sheet.totals).map(([group_name, t]) => ({
-          user_id: user!.id,
           period_id: periodId,
           company_id: sheet.companyId!,
           group_name,
@@ -279,7 +276,6 @@ function SalesTable({
   groups: ProductGroup[];
   sales: SalesTotal[];
 }) {
-  const { user } = useAuth();
   const qc = useQueryClient();
 
   const groupNames = useMemo(() => {
@@ -303,7 +299,6 @@ function SalesTable({
         if (error) throw error;
       } else if (value != null) {
         const { error } = await supabase.from("sales_totals").insert({
-          user_id: user!.id,
           period_id: periodId,
           company_id: companyId,
           group_name: group,
@@ -409,7 +404,6 @@ function Shipments({
   factories: Factory[];
   sales: SalesTotal[];
 }) {
-  const { user } = useAuth();
   const qc = useQueryClient();
 
   const { data: shipments = [] } = useQuery({
@@ -459,7 +453,6 @@ function Shipments({
         const { data, error } = await supabase
           .from("shipments")
           .insert({
-            user_id: user!.id,
             period_id: period.id,
             company_id: company.id,
             title: `${company.name} — ${period.label}`,
@@ -474,7 +467,6 @@ function Shipments({
           .map((r, i) => {
             const g = groups.find((x) => x.name === r.group_name);
             return {
-              user_id: user!.id,
               shipment_id: shipment.id,
               group_name: r.group_name,
               qty: effectiveQty(r),
@@ -499,7 +491,6 @@ function Shipments({
   const addExtra = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("shipments").insert({
-        user_id: user!.id,
         period_id: period.id,
         title: "Remessa avulsa",
         is_extra: true,
@@ -606,7 +597,6 @@ function ShipmentCard({
   period: Period;
   onChange: () => void;
 }) {
-  const { user } = useAuth();
   const [newGroup, setNewGroup] = useState("");
   const computed = items.map((i) => computeItem(i, groups));
   const total = sumTotals(computed);
@@ -763,7 +753,6 @@ function ShipmentCard({
             const g = groups.find((x) => x.name === newGroup);
             run(() =>
               supabase.from("shipment_items").insert({
-                user_id: user!.id,
                 shipment_id: shipment.id,
                 group_name: newGroup,
                 qty: 0,

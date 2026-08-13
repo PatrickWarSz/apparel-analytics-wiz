@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { currentPeriodLabel, ensureSeed, type Period } from "@/lib/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +44,6 @@ function Home() {
 }
 
 function Periods() {
-  const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [label, setLabel] = useState(currentPeriodLabel());
@@ -53,7 +51,7 @@ function Periods() {
   const { data: periods = [], isLoading } = useQuery({
     queryKey: ["periods"],
     queryFn: async () => {
-      if (user) await ensureSeed(user.id);
+      await ensureSeed();
       const { data, error } = await supabase
         .from("periods")
         .select("*")
@@ -67,7 +65,7 @@ function Periods() {
     mutationFn: async () => {
       const { data, error } = await supabase
         .from("periods")
-        .insert({ label: label.trim(), user_id: user!.id })
+        .insert({ label: label.trim() })
         .select()
         .single();
       if (error) throw error;
