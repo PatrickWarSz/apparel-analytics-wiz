@@ -192,7 +192,10 @@ export function FabricStock({
           </div>
         )}
       </section>
+        </>
+      )}
     </div>
+
   );
 }
 
