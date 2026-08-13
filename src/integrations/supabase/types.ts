@@ -41,6 +41,67 @@ export type Database = {
         }
         Relationships: []
       }
+      fabric_moves: {
+        Row: {
+          company_id: string
+          created_at: string
+          doc: string
+          id: string
+          kg: number
+          kind: string
+          moved_on: string
+          note: string
+          period_id: string | null
+          shipment_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          doc?: string
+          id?: string
+          kg?: number
+          kind?: string
+          moved_on?: string
+          note?: string
+          period_id?: string | null
+          shipment_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          doc?: string
+          id?: string
+          kg?: number
+          kind?: string
+          moved_on?: string
+          note?: string
+          period_id?: string | null
+          shipment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabric_moves_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabric_moves_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fabric_moves_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       factories: {
         Row: {
           created_at: string
@@ -74,6 +135,7 @@ export type Database = {
           fabric_price_per_kg: number
           id: string
           label: string
+          reference_label: string
           user_id: string | null
         }
         Insert: {
@@ -81,6 +143,7 @@ export type Database = {
           fabric_price_per_kg?: number
           id?: string
           label: string
+          reference_label?: string
           user_id?: string | null
         }
         Update: {
@@ -88,6 +151,7 @@ export type Database = {
           fabric_price_per_kg?: number
           id?: string
           label?: string
+          reference_label?: string
           user_id?: string | null
         }
         Relationships: []
