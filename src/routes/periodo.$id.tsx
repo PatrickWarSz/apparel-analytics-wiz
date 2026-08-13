@@ -102,31 +102,51 @@ function PeriodPage() {
 
   if (!period) return <p className="text-sm text-muted-foreground">Carregando…</p>;
 
+  const reference = period.reference_label || defaultReference(period.label);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mês de referência</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mês ativo</p>
           <h1 className="num text-3xl font-extrabold">{period.label}</h1>
+          <p className="num mt-1 text-sm text-muted-foreground">
+            fechamento com as planilhas de <strong className="text-foreground">{reference}</strong>
+          </p>
         </div>
-        <div>
-          <label className="text-xs font-semibold uppercase text-muted-foreground">Tecido (R$/kg)</label>
-          <NumberCell
-            value={period.fabric_price_per_kg}
-            step="0.01"
-            className="w-32"
-            onCommit={(v) => savePeriod.mutate({ fabric_price_per_kg: v ?? 0 })}
-          />
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label className="text-xs font-semibold uppercase text-muted-foreground">Mês de referência</label>
+            <Input
+              defaultValue={reference}
+              className="num w-28 text-center"
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v && v !== reference) savePeriod.mutate({ reference_label: v });
+              }}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase text-muted-foreground">Tecido (R$/kg)</label>
+            <NumberCell
+              value={period.fabric_price_per_kg}
+              step="0.01"
+              className="w-32"
+              onCommit={(v) => savePeriod.mutate({ fabric_price_per_kg: v ?? 0 })}
+            />
+          </div>
         </div>
       </div>
 
       <Tabs defaultValue="vendas">
         <TabsList>
-          <TabsTrigger value="vendas">Vendas</TabsTrigger>
+          <TabsTrigger value="vendas">Fechamento ({reference})</TabsTrigger>
           <TabsTrigger value="remessa">Remessa e industrialização</TabsTrigger>
+          <TabsTrigger value="mensagem">Mensagem</TabsTrigger>
+          <TabsTrigger value="estoque">Estoque fiscal</TabsTrigger>
         </TabsList>
         <TabsContent value="vendas" className="space-y-6 pt-4">
-          <Importer periodId={id} companies={companies} />
+          <Importer periodId={id} companies={companies} reference={reference} />
           <SalesTable periodId={id} companies={companies} groups={groups} sales={sales} />
         </TabsContent>
         <TabsContent value="remessa" className="pt-4">
@@ -137,6 +157,12 @@ function PeriodPage() {
             factories={factories}
             sales={sales}
           />
+        </TabsContent>
+        <TabsContent value="mensagem" className="pt-4">
+          <Messages period={period} companies={companies} groups={groups} factories={factories} />
+        </TabsContent>
+        <TabsContent value="estoque" className="pt-4">
+          <FabricStock period={period} companies={companies} groups={groups} />
         </TabsContent>
       </Tabs>
     </div>
