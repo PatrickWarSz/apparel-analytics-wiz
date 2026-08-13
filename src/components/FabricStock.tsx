@@ -21,13 +21,16 @@ export function FabricStock({
   period,
   companies,
   groups,
+  compact = false,
 }: {
-  period: Period;
+  period?: Period | null;
   companies: Company[];
   groups: ProductGroup[];
+  compact?: boolean;
 }) {
   const qc = useQueryClient();
-  const { shipments, items } = useShipments(period.id);
+  const { shipments, items } = useShipments(period?.id ?? "");
+
 
   const { data: moves = [] } = useQuery({
     queryKey: ["fabric_moves"],
