@@ -14,7 +14,270 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          match_key: string
+          name: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_key?: string
+          name: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_key?: string
+          name?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      factories: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_limit: number
+          name: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_limit?: number
+          name: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_limit?: number
+          name?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      periods: {
+        Row: {
+          created_at: string
+          fabric_price_per_kg: number
+          id: string
+          label: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fabric_price_per_kg?: number
+          id?: string
+          label: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fabric_price_per_kg?: number
+          id?: string
+          label?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      product_groups: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          sort_order: number
+          unit_price: number | null
+          user_id: string
+          yield_per_kg: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          sort_order?: number
+          unit_price?: number | null
+          user_id: string
+          yield_per_kg?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          sort_order?: number
+          unit_price?: number | null
+          user_id?: string
+          yield_per_kg?: number | null
+        }
+        Relationships: []
+      }
+      sales_totals: {
+        Row: {
+          company_id: string
+          created_at: string
+          group_name: string
+          id: string
+          period_id: string
+          qty_adjusted: number | null
+          qty_from_sets: number
+          qty_sheet: number
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          group_name: string
+          id?: string
+          period_id: string
+          qty_adjusted?: number | null
+          qty_from_sets?: number
+          qty_sheet?: number
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          group_name?: string
+          id?: string
+          period_id?: string
+          qty_adjusted?: number | null
+          qty_from_sets?: number
+          qty_sheet?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_totals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_totals_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipment_items: {
+        Row: {
+          created_at: string
+          group_name: string
+          id: string
+          qty: number
+          shipment_id: string
+          sort_order: number
+          unit_price: number | null
+          user_id: string
+          yield_per_kg: number | null
+        }
+        Insert: {
+          created_at?: string
+          group_name: string
+          id?: string
+          qty?: number
+          shipment_id: string
+          sort_order?: number
+          unit_price?: number | null
+          user_id: string
+          yield_per_kg?: number | null
+        }
+        Update: {
+          created_at?: string
+          group_name?: string
+          id?: string
+          qty?: number
+          shipment_id?: string
+          sort_order?: number
+          unit_price?: number | null
+          user_id?: string
+          yield_per_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_items_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipments: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          factory_id: string | null
+          id: string
+          is_extra: boolean
+          period_id: string
+          sort_order: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          factory_id?: string | null
+          id?: string
+          is_extra?: boolean
+          period_id: string
+          sort_order?: number
+          title?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          factory_id?: string | null
+          id?: string
+          is_extra?: boolean
+          period_id?: string
+          sort_order?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
