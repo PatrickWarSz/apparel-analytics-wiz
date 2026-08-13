@@ -157,8 +157,9 @@ function Periods() {
                 </span>
                 <span>
                   <span className="num block text-lg font-bold">{p.label}</span>
-                  <span className="text-xs text-muted-foreground">
-                    Tecido {p.fabric_price_per_kg.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/kg
+                  <span className="num block text-xs text-muted-foreground">
+                    ref. {p.reference_label || defaultReference(p.label)} · tecido{" "}
+                    {p.fabric_price_per_kg.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/kg
                   </span>
                 </span>
               </Link>
