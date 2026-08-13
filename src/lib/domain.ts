@@ -18,7 +18,25 @@ export type ProductGroup = {
 
 export type Factory = { id: string; name: string; monthly_limit: number; sort_order: number };
 
-export type Period = { id: string; label: string; fabric_price_per_kg: number; created_at: string };
+export type Period = {
+  id: string;
+  label: string;
+  reference_label: string;
+  fabric_price_per_kg: number;
+  created_at: string;
+};
+
+export type FabricMove = {
+  id: string;
+  company_id: string;
+  period_id: string | null;
+  shipment_id: string | null;
+  kind: "entrada" | "saida";
+  kg: number;
+  doc: string;
+  note: string;
+  moved_on: string;
+};
 
 export type SalesTotal = {
   id: string;
