@@ -1,27 +1,10 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
-import { LogOut, Factory } from "lucide-react";
-import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Link, useRouterState } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import { Factory } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
-
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth" });
-  }, [loading, user, navigate]);
-
-  if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Carregando…
-      </div>
-    );
-  }
 
   const links = [
     { to: "/", label: "Meses" },
@@ -52,20 +35,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-3 text-xs">
-            <span className="hidden opacity-70 sm:inline">{user.email}</span>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 gap-1 text-primary-foreground hover:bg-white/10"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                navigate({ to: "/auth" });
-              }}
-            >
-              <LogOut className="size-4" /> Sair
-            </Button>
-          </div>
         </div>
       </header>
       <main className="mx-auto max-w-[1400px] px-5 py-6">{children}</main>
