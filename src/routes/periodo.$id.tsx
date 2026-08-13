@@ -238,9 +238,12 @@ function Importer({
 
   return (
     <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-      <h2 className="text-lg font-bold">Importar planilhas do mês</h2>
+      <h2 className="text-lg font-bold">
+        Importar planilhas de vendas · <span className="num">{reference}</span>
+      </h2>
       <p className="mb-4 text-sm text-muted-foreground">
-        Aceita .xls e .xlsx. Os conjuntos são destrinchados automaticamente em TOP + LEGGING/SHORT.
+        Use os relatórios do mês de referência ({reference}). Aceita .xls e .xlsx; os conjuntos são
+        destrinchados automaticamente em TOP + LEGGING/SHORT.
       </p>
       <input
         ref={inputRef}
