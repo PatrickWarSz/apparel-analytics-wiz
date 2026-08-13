@@ -132,3 +132,17 @@ export function currentPeriodLabel() {
   const now = new Date();
   return `${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
 }
+
+/** Desloca um rótulo MM/AAAA em N meses (-1 = mês anterior). */
+export function shiftLabel(label: string, delta: number) {
+  const [m, y] = label.split("/").map((n) => Number(n));
+  if (!m || !y) return label;
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
+/** Mês de referência padrão: o mês anterior ao mês ativo. */
+export const defaultReference = (label: string) => shiftLabel(label, -1);
+
+export const kgNum = (value: number) =>
+  value.toLocaleString("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
