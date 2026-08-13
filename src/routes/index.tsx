@@ -61,11 +61,13 @@ function Periods() {
     },
   });
 
+  const existing = periods.find((p) => p.label === label.trim());
+
   const create = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase
         .from("periods")
-        .insert({ label: label.trim() })
+        .insert({ label: label.trim(), reference_label: defaultReference(label.trim()) })
         .select()
         .single();
       if (error) throw error;
