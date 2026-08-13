@@ -18,8 +18,10 @@ const norm = (v: unknown) =>
  *  destrinchando CONJUNTO DE LEGGING / CONJUNTO DE SHORT em TOP + peça base. */
 export function parseSalesFile(fileName: string, data: ArrayBuffer): ParsedSheet {
   const wb = XLSX.read(data, { type: "array" });
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, blankrows: false });
+  const sheetName = wb.SheetNames[0] ?? "";
+  const ws = wb.Sheets[sheetName];
+  const rows = ws ? XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, blankrows: false }) : [];
+
 
   let qtyIdx = 2;
   let groupIdx = 4;
