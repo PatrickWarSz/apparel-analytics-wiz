@@ -21,13 +21,16 @@ export function FabricStock({
   period,
   companies,
   groups,
+  compact = false,
 }: {
-  period: Period;
+  period?: Period | null;
   companies: Company[];
   groups: ProductGroup[];
+  compact?: boolean;
 }) {
   const qc = useQueryClient();
-  const { shipments, items } = useShipments(period.id);
+  const { shipments, items } = useShipments(period?.id ?? "");
+
 
   const { data: moves = [] } = useQuery({
     queryKey: ["fabric_moves"],
@@ -51,6 +54,7 @@ export function FabricStock({
 
   const applyShipments = useMutation({
     mutationFn: async () => {
+      if (!period) return 0;
       const done = new Set(moves.filter((m) => m.shipment_id).map((m) => m.shipment_id));
       const rows = shipments
         .filter((s) => s.company_id && !done.has(s.id))
@@ -91,12 +95,15 @@ export function FabricStock({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Saldo fiscal de tecido por empresa. Lance as entradas de compra (com a nota) e baixe
-          automaticamente os kg das remessas geradas neste mês.
+          {compact
+            ? "Saldo fiscal de tecido por empresa. Lançamentos e movimentações ficam na aba Estoque fiscal, no topo."
+            : "Saldo fiscal de tecido por empresa. Lance as entradas de compra (com a nota) e acompanhe todas as movimentações."}
         </p>
-        <Button onClick={() => applyShipments.mutate()} disabled={applyShipments.isPending}>
-          <Zap className="size-4" /> Baixar remessas de {period.label}
-        </Button>
+        {period && (
+          <Button onClick={() => applyShipments.mutate()} disabled={applyShipments.isPending}>
+            <Zap className="size-4" /> Baixar remessas de {period.label}
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -123,7 +130,10 @@ export function FabricStock({
         })}
       </div>
 
-      <MoveForm companies={companies} periodId={period.id} onDone={refresh} />
+      {compact ? null : (
+        <>
+      <MoveForm companies={companies} periodId={period?.id ?? null} onDone={refresh} />
+
 
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h3 className="mb-3 font-bold">Movimentações</h3>
@@ -182,7 +192,10 @@ export function FabricStock({
           </div>
         )}
       </section>
+        </>
+      )}
     </div>
+
   );
 }
 
@@ -192,7 +205,7 @@ function MoveForm({
   onDone,
 }: {
   companies: Company[];
-  periodId: string;
+  periodId: string | null;
   onDone: () => void;
 }) {
   const [companyId, setCompanyId] = useState("");
