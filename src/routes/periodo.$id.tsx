@@ -23,7 +23,6 @@ import { computeItem, totals as sumTotals } from "@/lib/calc";
 import { guessCompany, parseSalesFile, type ParsedSheet } from "@/lib/xls";
 import { NumberCell } from "@/routes/config";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -183,7 +182,7 @@ function Importer({ periodId, companies }: { periodId: string; companies: Compan
         const rows = Object.entries(sheet.totals).map(([group_name, t]) => ({
           user_id: user!.id,
           period_id: periodId,
-          company_id: sheet.companyId,
+          company_id: sheet.companyId!,
           group_name,
           qty_sheet: t.qty,
           qty_from_sets: t.fromSets,
@@ -613,7 +612,7 @@ function ShipmentCard({
   const total = sumTotals(computed);
   const fabricValue = total.kg * period.fabric_price_per_kg;
 
-  const run = async (fn: () => Promise<{ error: unknown }>) => {
+  const run = async (fn: () => PromiseLike<{ error: unknown }>) => {
     const { error } = await fn();
     if (error) toast.error((error as { message?: string }).message ?? "Erro ao salvar");
     onChange();
@@ -794,5 +793,3 @@ function ShipmentCard({
     </section>
   );
 }
-
-export { Input as _Input };

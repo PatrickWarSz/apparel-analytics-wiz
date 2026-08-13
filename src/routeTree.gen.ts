@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ConfigRouteImport } from './routes/config'
+import { Route as PeriodoIdRouteImport } from './routes/periodo.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const ConfigRoute = ConfigRouteImport.update({
   path: '/config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PeriodoIdRoute = PeriodoIdRouteImport.update({
+  id: '/periodo/$id',
+  path: '/periodo/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/config': typeof ConfigRoute
+  '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/config': typeof ConfigRoute
+  '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/config': typeof ConfigRoute
+  '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/config'
+  fullPaths: '/' | '/auth' | '/config' | '/periodo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/config'
-  id: '__root__' | '/' | '/auth' | '/config'
+  to: '/' | '/auth' | '/config' | '/periodo/$id'
+  id: '__root__' | '/' | '/auth' | '/config' | '/periodo/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ConfigRoute: typeof ConfigRoute
+  PeriodoIdRoute: typeof PeriodoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/periodo/$id': {
+      id: '/periodo/$id'
+      path: '/periodo/$id'
+      fullPath: '/periodo/$id'
+      preLoaderRoute: typeof PeriodoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ConfigRoute: ConfigRoute,
+  PeriodoIdRoute: PeriodoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
