@@ -177,7 +177,15 @@ function PeriodPage() {
 
 type Staged = ParsedSheet & { companyId: string | null };
 
-function Importer({ periodId, companies }: { periodId: string; companies: Company[] }) {
+function Importer({
+  periodId,
+  companies,
+  reference,
+}: {
+  periodId: string;
+  companies: Company[];
+  reference: string;
+}) {
   const qc = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [staged, setStaged] = useState<Staged[]>([]);
