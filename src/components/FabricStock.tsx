@@ -205,7 +205,7 @@ function MoveForm({
   onDone,
 }: {
   companies: Company[];
-  periodId: string;
+  periodId: string | null;
   onDone: () => void;
 }) {
   const [companyId, setCompanyId] = useState("");
