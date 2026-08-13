@@ -5,8 +5,12 @@ import { toast } from "sonner";
 import { Copy, FileSpreadsheet, Plus, Trash2, Upload, Zap } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Messages } from "@/components/Messages";
+import { FabricStock } from "@/components/FabricStock";
 import {
   brl,
+  defaultReference,
   effectiveQty,
   int,
   kg as kgFmt,
