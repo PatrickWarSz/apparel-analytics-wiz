@@ -5,7 +5,13 @@ import { toast } from "sonner";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { currentPeriodLabel, ensureSeed, type Period } from "@/lib/domain";
+import {
+  currentPeriodLabel,
+  defaultReference,
+  ensureSeed,
+  shiftLabel,
+  type Period,
+} from "@/lib/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
