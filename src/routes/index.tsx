@@ -5,7 +5,13 @@ import { toast } from "sonner";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { currentPeriodLabel, ensureSeed, type Period } from "@/lib/domain";
+import {
+  currentPeriodLabel,
+  defaultReference,
+  ensureSeed,
+  shiftLabel,
+  type Period,
+} from "@/lib/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -61,11 +67,13 @@ function Periods() {
     },
   });
 
+  const existing = periods.find((p) => p.label === label.trim());
+
   const create = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase
         .from("periods")
-        .insert({ label: label.trim() })
+        .insert({ label: label.trim(), reference_label: defaultReference(label.trim()) })
         .select()
         .single();
       if (error) throw error;
@@ -93,24 +101,40 @@ function Periods() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold">Meses de referência</h1>
+          <h1 className="text-2xl font-extrabold">Meses de trabalho</h1>
           <p className="text-sm text-muted-foreground">
-            Cada mês guarda as planilhas importadas, os ajustes e as remessas geradas.
+            O <strong>mês ativo</strong> é quando você emite as notas; o <strong>mês de referência</strong>{" "}
+            (anterior) é de onde vêm as planilhas de vendas.
           </p>
         </div>
-        <div className="flex items-end gap-2">
-          <div>
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Novo mês</label>
+        <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
+          <label className="text-xs font-semibold uppercase text-muted-foreground">Mês ativo</label>
+          <div className="mt-1 flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setLabel((l) => shiftLabel(l, -1))}>
+              –
+            </Button>
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="07/2026"
-              className="num w-32"
+              placeholder="08/2026"
+              className="num w-28 text-center"
             />
+            <Button variant="outline" size="icon" onClick={() => setLabel((l) => shiftLabel(l, 1))}>
+              +
+            </Button>
+            {existing ? (
+              <Button onClick={() => navigate({ to: "/periodo/$id", params: { id: existing.id } })}>
+                Abrir
+              </Button>
+            ) : (
+              <Button onClick={() => create.mutate()} disabled={!label.trim() || create.isPending}>
+                <Plus className="size-4" /> Criar
+              </Button>
+            )}
           </div>
-          <Button onClick={() => create.mutate()} disabled={!label.trim() || create.isPending}>
-            <Plus className="size-4" /> Criar
-          </Button>
+          <p className="num mt-2 text-xs text-muted-foreground">
+            fechamento com as planilhas de {defaultReference(label.trim() || currentPeriodLabel())}
+          </p>
         </div>
       </div>
 
@@ -133,8 +157,9 @@ function Periods() {
                 </span>
                 <span>
                   <span className="num block text-lg font-bold">{p.label}</span>
-                  <span className="text-xs text-muted-foreground">
-                    Tecido {p.fabric_price_per_kg.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/kg
+                  <span className="num block text-xs text-muted-foreground">
+                    ref. {p.reference_label || defaultReference(p.label)} · tecido{" "}
+                    {p.fabric_price_per_kg.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/kg
                   </span>
                 </span>
               </Link>
