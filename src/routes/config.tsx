@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import type { Company, Factory, ProductGroup } from "@/lib/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,7 +76,6 @@ function Section({ title, hint, children }: { title: string; hint: string; child
 }
 
 function Groups() {
-  const { user } = useAuth();
   const qc = useQueryClient();
   const { data: groups = [] } = useTable<ProductGroup>("product_groups", "groups");
   const [name, setName] = useState("");
@@ -94,7 +92,6 @@ function Groups() {
   const add = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("product_groups").insert({
-        user_id: user!.id,
         name: name.trim().toUpperCase(),
         kind: "propria",
         sort_order: groups.length + 1,
@@ -220,7 +217,6 @@ export function NumberCell({
 }
 
 function Companies() {
-  const { user } = useAuth();
   const qc = useQueryClient();
   const { data: companies = [] } = useTable<Company>("companies", "companies");
   const [name, setName] = useState("");
@@ -235,7 +231,6 @@ function Companies() {
   const add = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("companies").insert({
-        user_id: user!.id,
         name: name.trim().toUpperCase(),
         match_key: name.trim().split(" ")[0]?.toUpperCase() ?? "",
         sort_order: companies.length + 1,
@@ -297,7 +292,6 @@ function Companies() {
 }
 
 function Factories() {
-  const { user } = useAuth();
   const qc = useQueryClient();
   const { data: factories = [] } = useTable<Factory>("factories", "factories");
   const [name, setName] = useState("");
@@ -312,7 +306,6 @@ function Factories() {
   const add = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("factories").insert({
-        user_id: user!.id,
         name: name.trim().toUpperCase(),
         monthly_limit: 0,
         sort_order: factories.length + 1,

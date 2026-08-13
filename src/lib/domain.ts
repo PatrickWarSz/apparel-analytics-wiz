@@ -76,7 +76,7 @@ export const DEFAULT_FACTORIES = [
 ];
 
 /** Cria os cadastros iniciais caso o usuário ainda não tenha nenhum. */
-export async function ensureSeed(userId: string) {
+export async function ensureSeed() {
   const [{ count: companies }, { count: groups }, { count: factories }] = await Promise.all([
     supabase.from("companies").select("id", { count: "exact", head: true }),
     supabase.from("product_groups").select("id", { count: "exact", head: true }),
@@ -86,17 +86,17 @@ export async function ensureSeed(userId: string) {
   if (!companies) {
     await supabase
       .from("companies")
-      .insert(DEFAULT_COMPANIES.map((c, i) => ({ ...c, sort_order: i + 1, user_id: userId })));
+      .insert(DEFAULT_COMPANIES.map((c, i) => ({ ...c, sort_order: i + 1 })));
   }
   if (!groups) {
     await supabase
       .from("product_groups")
-      .insert(DEFAULT_GROUPS.map((g) => ({ ...g, user_id: userId })));
+      .insert(DEFAULT_GROUPS);
   }
   if (!factories) {
     await supabase
       .from("factories")
-      .insert(DEFAULT_FACTORIES.map((f, i) => ({ ...f, sort_order: i + 1, user_id: userId })));
+      .insert(DEFAULT_FACTORIES.map((f, i) => ({ ...f, sort_order: i + 1 })));
   }
 }
 
