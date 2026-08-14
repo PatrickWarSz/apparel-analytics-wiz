@@ -41,6 +41,89 @@ export type Database = {
         }
         Relationships: []
       }
+      counter_note_items: {
+        Row: {
+          created_at: string
+          id: string
+          model_id: string | null
+          note_id: string
+          qty: number
+          size: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          model_id?: string | null
+          note_id: string
+          qty?: number
+          size?: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          model_id?: string | null
+          note_id?: string
+          qty?: number
+          size?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counter_note_items_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "resale_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counter_note_items_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "counter_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      counter_notes: {
+        Row: {
+          created_at: string
+          cycle_id: string | null
+          doc: string
+          id: string
+          note_date: string
+          status: string
+          supplier: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_id?: string | null
+          doc?: string
+          id?: string
+          note_date?: string
+          status?: string
+          supplier?: string
+        }
+        Update: {
+          created_at?: string
+          cycle_id?: string | null
+          doc?: string
+          id?: string
+          note_date?: string
+          status?: string
+          supplier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counter_notes_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "resale_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fabric_moves: {
         Row: {
           company_id: string
@@ -188,6 +271,202 @@ export type Database = {
           yield_per_kg?: number | null
         }
         Relationships: []
+      }
+      resale_code_map: {
+        Row: {
+          code: string
+          company_id: string
+          created_at: string
+          id: string
+          last_description: string
+          model_id: string | null
+          size: string
+        }
+        Insert: {
+          code: string
+          company_id: string
+          created_at?: string
+          id?: string
+          last_description?: string
+          model_id?: string | null
+          size?: string
+        }
+        Update: {
+          code?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_description?: string
+          model_id?: string | null
+          size?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resale_code_map_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resale_code_map_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "resale_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resale_cycle_allocations: {
+        Row: {
+          company_id: string | null
+          company_name: string
+          created_at: string
+          cycle_id: string
+          id: string
+          model_id: string | null
+          model_name: string
+          qty: number
+          size: string
+        }
+        Insert: {
+          company_id?: string | null
+          company_name?: string
+          created_at?: string
+          cycle_id: string
+          id?: string
+          model_id?: string | null
+          model_name?: string
+          qty?: number
+          size?: string
+        }
+        Update: {
+          company_id?: string | null
+          company_name?: string
+          created_at?: string
+          cycle_id?: string
+          id?: string
+          model_id?: string | null
+          model_name?: string
+          qty?: number
+          size?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resale_cycle_allocations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resale_cycle_allocations_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "resale_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resale_cycle_allocations_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "resale_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resale_cycles: {
+        Row: {
+          closed_on: string
+          created_at: string
+          id: string
+          label: string
+        }
+        Insert: {
+          closed_on?: string
+          created_at?: string
+          id?: string
+          label?: string
+        }
+        Update: {
+          closed_on?: string
+          created_at?: string
+          id?: string
+          label?: string
+        }
+        Relationships: []
+      }
+      resale_models: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sizes: string[]
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sizes?: string[]
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sizes?: string[]
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      resale_sales: {
+        Row: {
+          code: string
+          company_id: string
+          created_at: string
+          description: string
+          group_name: string
+          id: string
+          period_id: string
+          qty: number
+        }
+        Insert: {
+          code: string
+          company_id: string
+          created_at?: string
+          description?: string
+          group_name?: string
+          id?: string
+          period_id: string
+          qty?: number
+        }
+        Update: {
+          code?: string
+          company_id?: string
+          created_at?: string
+          description?: string
+          group_name?: string
+          id?: string
+          period_id?: string
+          qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resale_sales_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resale_sales_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_totals: {
         Row: {
