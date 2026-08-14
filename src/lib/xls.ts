@@ -29,15 +29,21 @@ export function parseSalesFile(fileName: string, data: ArrayBuffer): ParsedSheet
 
   let qtyIdx = 2;
   let groupIdx = 4;
+  let codeIdx = 0;
+  let descIdx = 1;
   let start = 0;
 
   for (let i = 0; i < Math.min(rows.length, 15); i++) {
     const r = (rows[i] ?? []).map(norm);
     const g = r.findIndex((c) => c === "GRUPO");
     const q = r.findIndex((c) => c.startsWith("QUANT"));
+    const cd = r.findIndex((c) => c.startsWith("CODIGO"));
+    const ds = r.findIndex((c) => c.startsWith("DESCRICAO"));
     if (g >= 0 || q >= 0) {
       if (g >= 0) groupIdx = g;
       if (q >= 0) qtyIdx = q;
+      if (cd >= 0) codeIdx = cd;
+      if (ds >= 0) descIdx = ds;
       start = i + 1;
       break;
     }
@@ -51,6 +57,7 @@ export function parseSalesFile(fileName: string, data: ArrayBuffer): ParsedSheet
     if (fromSet) t.fromSets += qty;
   };
 
+  const byCode = new Map<string, ParsedLine>();
   let counted = 0;
   let ignored = 0;
 
@@ -63,6 +70,20 @@ export function parseSalesFile(fileName: string, data: ArrayBuffer): ParsedSheet
       continue;
     }
     counted++;
+
+    const code = String(row[codeIdx] ?? "").trim();
+    if (code) {
+      const cur = byCode.get(code);
+      if (cur) cur.qty += qty;
+      else
+        byCode.set(code, {
+          code,
+          description: String(row[descIdx] ?? "").trim(),
+          group,
+          qty,
+        });
+    }
+
     if (group.startsWith("CONJUNTO DE ")) {
       const base = group.replace("CONJUNTO DE ", "").trim();
       add(base, qty, true);
@@ -72,7 +93,8 @@ export function parseSalesFile(fileName: string, data: ArrayBuffer): ParsedSheet
     }
   }
 
-  return { fileName, totals, rows: counted, ignored };
+  return { fileName, totals, lines: [...byCode.values()], rows: counted, ignored };
+
 }
 
 export function guessCompany(fileName: string, companies: { id: string; match_key: string; name: string }[]) {
