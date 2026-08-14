@@ -166,7 +166,7 @@ function PeriodPage() {
           <Messages period={period} companies={companies} groups={groups} factories={factories} />
         </TabsContent>
         <TabsContent value="estoque" className="pt-4">
-          <FabricStock period={period} companies={companies} groups={groups} />
+          <FabricStock period={period} companies={companies} groups={groups} compact />
         </TabsContent>
       </Tabs>
     </div>
