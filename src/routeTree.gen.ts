@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfigRouteImport } from './routes/config'
+import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as PeriodoIdRouteImport } from './routes/periodo.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const ConfigRoute = ConfigRouteImport.update({
   path: '/config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EstoqueRoute = EstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeriodoIdRoute = PeriodoIdRouteImport.update({
   id: '/periodo/$id',
   path: '/periodo/$id',
@@ -32,30 +38,34 @@ const PeriodoIdRoute = PeriodoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
+  '/estoque': typeof EstoqueRoute
   '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
+  '/estoque': typeof EstoqueRoute
   '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
+  '/estoque': typeof EstoqueRoute
   '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/config' | '/periodo/$id'
+  fullPaths: '/' | '/config' | '/estoque' | '/periodo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/config' | '/periodo/$id'
-  id: '__root__' | '/' | '/config' | '/periodo/$id'
+  to: '/' | '/config' | '/estoque' | '/periodo/$id'
+  id: '__root__' | '/' | '/config' | '/estoque' | '/periodo/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfigRoute: typeof ConfigRoute
+  EstoqueRoute: typeof EstoqueRoute
   PeriodoIdRoute: typeof PeriodoIdRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/estoque': {
+      id: '/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof EstoqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/periodo/$id': {
       id: '/periodo/$id'
       path: '/periodo/$id'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfigRoute: ConfigRoute,
+  EstoqueRoute: EstoqueRoute,
   PeriodoIdRoute: PeriodoIdRoute,
 }
 export const routeTree = rootRouteImport
