@@ -1,11 +1,15 @@
 import * as XLSX from "xlsx";
 
+export type ParsedLine = { code: string; description: string; group: string; qty: number };
+
 export type ParsedSheet = {
   fileName: string;
   totals: Record<string, { qty: number; fromSets: number }>;
+  lines: ParsedLine[];
   rows: number;
   ignored: number;
 };
+
 
 const norm = (v: unknown) =>
   String(v ?? "")
