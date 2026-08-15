@@ -24,6 +24,8 @@ import {
 } from "@/lib/domain";
 import { computeItem, totals as sumTotals } from "@/lib/calc";
 import { guessCompany, parseSalesFile, type ParsedSheet } from "@/lib/xls";
+import { RESALE_GROUPS, norm } from "@/lib/resale";
+
 import { NumberCell } from "@/routes/config";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
