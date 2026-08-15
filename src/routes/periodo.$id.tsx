@@ -180,10 +180,12 @@ type Staged = ParsedSheet & { companyId: string | null };
 function Importer({
   periodId,
   companies,
+  groups,
   reference,
 }: {
   periodId: string;
   companies: Company[];
+  groups: ProductGroup[];
   reference: string;
 }) {
   const qc = useQueryClient();
@@ -206,6 +208,12 @@ function Importer({
     if (inputRef.current) inputRef.current.value = "";
   }
 
+  const resaleNames = useMemo(() => {
+    const set = new Set(RESALE_GROUPS);
+    for (const g of groups) if (g.kind === "revenda") set.add(norm(g.name));
+    return set;
+  }, [groups]);
+
   const importAll = useMutation({
     mutationFn: async () => {
       for (const sheet of staged) {
@@ -226,15 +234,48 @@ function Importer({
           const { error } = await supabase.from("sales_totals").insert(rows);
           if (error) throw error;
         }
+
+        // linhas de revenda (por código) para o módulo de Revenda
+        const resaleLines = sheet.lines.filter((l) => resaleNames.has(norm(l.group)));
+        await supabase
+          .from("resale_sales")
+          .delete()
+          .eq("period_id", periodId)
+          .eq("company_id", sheet.companyId);
+        if (resaleLines.length) {
+          const { error } = await supabase.from("resale_sales").insert(
+            resaleLines.map((l) => ({
+              period_id: periodId,
+              company_id: sheet.companyId!,
+              code: l.code,
+              description: l.description,
+              group_name: l.group,
+              qty: l.qty,
+            })),
+          );
+          if (error) throw error;
+          const { error: mapError } = await supabase.from("resale_code_map").upsert(
+            resaleLines.map((l) => ({
+              company_id: sheet.companyId!,
+              code: l.code,
+              last_description: l.description,
+            })),
+            { onConflict: "company_id,code", ignoreDuplicates: true },
+          );
+          if (mapError) throw mapError;
+        }
       }
     },
     onSuccess: () => {
       toast.success("Planilhas importadas");
       setStaged([]);
       qc.invalidateQueries({ queryKey: ["sales", periodId] });
+      qc.invalidateQueries({ queryKey: ["resale_sales"] });
+      qc.invalidateQueries({ queryKey: ["resale_code_map"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   return (
     <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
