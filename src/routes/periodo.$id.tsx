@@ -150,7 +150,7 @@ function PeriodPage() {
           <TabsTrigger value="estoque">Estoque fiscal</TabsTrigger>
         </TabsList>
         <TabsContent value="vendas" className="space-y-6 pt-4">
-          <Importer periodId={id} companies={companies} reference={reference} />
+          <Importer periodId={id} companies={companies} groups={groups} reference={reference} />
           <SalesTable periodId={id} companies={companies} groups={groups} sales={sales} />
         </TabsContent>
         <TabsContent value="remessa" className="pt-4">
