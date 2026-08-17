@@ -77,17 +77,25 @@ export function guessSize(description: string, sizes: string[]): string {
   return "";
 }
 
-/** Escolhe o modelo cujo nome tem mais palavras em comum com a descrição da planilha. */
+/**
+ * Escolhe o modelo cujo nome tem mais palavras em comum com a descrição da planilha.
+ * Se houver empate (ex.: descrição genérica que serve para Dryfit e Algodão), devolve
+ * null de propósito — melhor deixar em branco do que sugerir o modelo errado.
+ */
 export function guessModel(description: string, models: ResaleModel[]): ResaleModel | null {
   const words = new Set(norm(description).split(/\s+/).filter(Boolean));
-  let best: { model: ResaleModel; score: number } | null = null;
+  let best: { model: ResaleModel; score: number; tied: boolean } | null = null;
   for (const m of models) {
     const tokens = norm(m.name).split(/\s+/).filter(Boolean);
     const score = tokens.reduce((acc, t) => acc + (words.has(t) ? 1 : 0), 0);
-    if (score > 0 && (!best || score > best.score)) best = { model: m, score };
+    if (score <= 0) continue;
+    if (!best || score > best.score) best = { model: m, score, tied: false };
+    else if (score === best.score) best.tied = true;
   }
-  return best?.model ?? null;
+  if (!best || best.tied) return null;
+  return best.model;
 }
+
 
 export const ALL_SIZES = ["P", "M", "G", "GG", "G1", "G2", "G3", "XG", "U"];
 
