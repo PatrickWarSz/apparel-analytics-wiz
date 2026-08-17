@@ -94,12 +94,18 @@ function Revenda() {
 
   const refresh = (keys: string[]) => keys.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
 
-  /** Empresas que vendem revenda = as que apareceram em alguma importação com grupo de revenda. */
+  /**
+   * Todas as empresas ficam disponíveis para escolha; as que já venderam revenda
+   * (ou já receberam rateio) aparecem primeiro, as demais entram como "sem histórico".
+   */
   const resaleCompanies = useMemo(() => {
     const ids = new Set(sales.map((s) => s.company_id));
     for (const a of allocations) if (a.company_id) ids.add(a.company_id);
-    return companies.filter((c) => ids.has(c.id));
+    return [...companies].sort(
+      (a, b) => Number(ids.has(b.id)) - Number(ids.has(a.id)),
+    );
   }, [companies, sales, allocations]);
+
 
   /** Período de referência: mês calendário mais recente com vendas de revenda importadas. */
   const referencePeriod = useMemo(() => {
