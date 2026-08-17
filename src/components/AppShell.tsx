@@ -9,6 +9,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const links = [
     { to: "/", label: "Meses" },
     { to: "/config", label: "Cadastros" },
+    { to: "/revenda", label: "Revenda" },
     { to: "/estoque", label: "Estoque fiscal" },
   ];
 
