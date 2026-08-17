@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfigRouteImport } from './routes/config'
 import { Route as EstoqueRouteImport } from './routes/estoque'
+import { Route as RevendaRouteImport } from './routes/revenda'
 import { Route as PeriodoIdRouteImport } from './routes/periodo.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const EstoqueRoute = EstoqueRouteImport.update({
   path: '/estoque',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RevendaRoute = RevendaRouteImport.update({
+  id: '/revenda',
+  path: '/revenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeriodoIdRoute = PeriodoIdRouteImport.update({
   id: '/periodo/$id',
   path: '/periodo/$id',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
   '/estoque': typeof EstoqueRoute
+  '/revenda': typeof RevendaRoute
   '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
   '/estoque': typeof EstoqueRoute
+  '/revenda': typeof RevendaRoute
   '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/config': typeof ConfigRoute
   '/estoque': typeof EstoqueRoute
+  '/revenda': typeof RevendaRoute
   '/periodo/$id': typeof PeriodoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/config' | '/estoque' | '/periodo/$id'
+  fullPaths: '/' | '/config' | '/estoque' | '/revenda' | '/periodo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/config' | '/estoque' | '/periodo/$id'
-  id: '__root__' | '/' | '/config' | '/estoque' | '/periodo/$id'
+  to: '/' | '/config' | '/estoque' | '/revenda' | '/periodo/$id'
+  id: '__root__' | '/' | '/config' | '/estoque' | '/revenda' | '/periodo/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfigRoute: typeof ConfigRoute
   EstoqueRoute: typeof EstoqueRoute
+  RevendaRoute: typeof RevendaRoute
   PeriodoIdRoute: typeof PeriodoIdRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EstoqueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/revenda': {
+      id: '/revenda'
+      path: '/revenda'
+      fullPath: '/revenda'
+      preLoaderRoute: typeof RevendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/periodo/$id': {
       id: '/periodo/$id'
       path: '/periodo/$id'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfigRoute: ConfigRoute,
   EstoqueRoute: EstoqueRoute,
+  RevendaRoute: RevendaRoute,
   PeriodoIdRoute: PeriodoIdRoute,
 }
 export const routeTree = rootRouteImport
