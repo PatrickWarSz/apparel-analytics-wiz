@@ -1,10 +1,22 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { Factory } from "lucide-react";
+import { Factory, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
+
 
   const links = [
     { to: "/", label: "Meses" },
@@ -37,7 +49,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
+          <button
+            type="button"
+            onClick={signOut}
+            className="ml-auto flex items-center gap-2 rounded px-3 py-1.5 text-sm transition-colors hover:bg-white/10"
+          >
+            <LogOut className="size-4" /> Sair
+          </button>
         </div>
+
       </header>
       <main className="mx-auto max-w-[1400px] px-5 py-6">{children}</main>
     </div>

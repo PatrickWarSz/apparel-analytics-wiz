@@ -26,7 +26,7 @@ import { computeItem, roundShipment, totals as sumTotals } from "@/lib/calc";
 import { guessCompany, parseSalesFile, type ParsedSheet } from "@/lib/xls";
 import { RESALE_GROUPS, norm } from "@/lib/resale";
 
-import { NumberCell } from "@/routes/config";
+import { NumberCell } from "@/routes/_authenticated/config";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,7 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
-export const Route = createFileRoute("/periodo/$id")({
+export const Route = createFileRoute("/_authenticated/periodo/$id")({
   head: () => ({
     meta: [
       { title: "Mês — Vendas, Remessa e Industrialização" },

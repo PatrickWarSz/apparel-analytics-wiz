@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const Route = createFileRoute("/config")({
+export const Route = createFileRoute("/_authenticated/config")({
   head: () => ({
     meta: [
       { title: "Cadastros — Central de Remessa" },
