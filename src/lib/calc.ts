@@ -58,7 +58,7 @@ export function roundShipment(items: ShipmentItem[], groups: ProductGroup[]): Ro
 
   let i = 0;
   while (diff > 0) {
-    base[order[i % order.length].idx] += 1;
+    base[order[i % order.length]!.idx] = base[order[i % order.length]!.idx]! + 1;
     diff--;
     i++;
   }
@@ -67,9 +67,9 @@ export function roundShipment(items: ShipmentItem[], groups: ProductGroup[]): Ro
   i = 0;
   let guard = 0;
   while (diff < 0 && guard < 10000) {
-    const idx = reverse[i % reverse.length].idx;
-    if (base[idx] > 1) {
-      base[idx] -= 1;
+    const idx = reverse[i % reverse.length]!.idx;
+    if (base[idx]! > 1) {
+      base[idx] = base[idx]! - 1;
       diff++;
     }
     i++;
@@ -80,7 +80,7 @@ export function roundShipment(items: ShipmentItem[], groups: ProductGroup[]): Ro
     id: x.item.id,
     group_name: x.c.group_name,
     from: x.c.qty,
-    to: base[n] * (x.c.yield_per_kg as number),
-    kg: base[n],
+    to: base[n]! * (x.c.yield_per_kg as number),
+    kg: base[n]!,
   }));
 }
