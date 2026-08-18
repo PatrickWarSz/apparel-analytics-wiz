@@ -107,10 +107,19 @@ function Revenda() {
   }, [companies, sales, allocations]);
 
 
-  /** Período de referência: mês calendário mais recente com vendas de revenda importadas. */
+  /** Período de referência: buscar sempre o mês passado em relação à data atual. */
   const referencePeriod = useMemo(() => {
     const withSales = periods.filter((p) => sales.some((s) => s.period_id === p.id));
+    
+    // Calcula qual é o mês anterior com base no dia de hoje
+    const dataAtual = new Date();
+    dataAtual.setMonth(dataAtual.getMonth() - 1);
+    const mesAnterior = `${String(dataAtual.getMonth() + 1).padStart(2, '0')}/${dataAtual.getFullYear()}`;
+    
+    // Tenta priorizar o mês anterior. Se por acaso a planilha dele ainda não existir, 
+    // usa o mais recente disponível no banco como margem de segurança (fallback).
     return (
+      withSales.find((p) => p.label === mesAnterior) ?? 
       withSales.sort((a, b) => labelValue(b.label) - labelValue(a.label))[0] ?? null
     );
   }, [periods, sales]);
