@@ -682,6 +682,7 @@ function ShipmentCard({
   onChange: () => void;
 }) {
   const [newGroup, setNewGroup] = useState("");
+  const [rounding, setRounding] = useState(false);
   const computed = items.map((i) => computeItem(i, groups));
   const total = sumTotals(computed);
   const fabricValue = total.kg * period.fabric_price_per_kg;
@@ -691,6 +692,29 @@ function ShipmentCard({
     if (error) toast.error((error as { message?: string }).message ?? "Erro ao salvar");
     onChange();
   };
+
+  const roundAll = async () => {
+    const rows = roundShipment(items, groups);
+    const changed = rows.filter((r) => r.to !== r.from);
+    if (!changed.length) {
+      toast.info("Já está arredondado em kg cheios");
+      return;
+    }
+    setRounding(true);
+    for (const r of changed) {
+      const { error } = await supabase.from("shipment_items").update({ qty: r.to }).eq("id", r.id);
+      if (error) {
+        toast.error(error.message);
+        break;
+      }
+    }
+    setRounding(false);
+    toast.success(
+      `Arredondado: ${changed.map((r) => `${r.group_name} ${r.from}→${r.to} (${r.kg} kg)`).join(" · ")}`,
+    );
+    onChange();
+  };
+
 
   const copy = () => {
     const lines = [
