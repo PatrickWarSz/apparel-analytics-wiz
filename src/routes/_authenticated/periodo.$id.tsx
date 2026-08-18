@@ -34,7 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
-export const Route = createFileRoute("/periodo/$id")({
+export const Route = createFileRoute("/_authenticated/periodo/$id")({
   head: () => ({
     meta: [
       { title: "Mês — Vendas, Remessa e Industrialização" },

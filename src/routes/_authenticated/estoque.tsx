@@ -5,7 +5,7 @@ import { FabricStock } from "@/components/FabricStock";
 import { supabase } from "@/integrations/supabase/client";
 import type { Company, ProductGroup } from "@/lib/domain";
 
-export const Route = createFileRoute("/estoque")({
+export const Route = createFileRoute("/_authenticated/estoque")({
   head: () => ({
     meta: [
       { title: "Estoque fiscal de tecido — Central de Remessa" },

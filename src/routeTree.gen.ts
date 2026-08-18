@@ -9,122 +9,128 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ConfigRouteImport } from './routes/config'
-import { Route as EstoqueRouteImport } from './routes/estoque'
-import { Route as RevendaRouteImport } from './routes/revenda'
-import { Route as PeriodoIdRouteImport } from './routes/periodo.$id'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedConfigRouteImport } from './routes/_authenticated/config'
+import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
+import { Route as AuthenticatedRevendaRouteImport } from './routes/_authenticated/revenda'
+import { Route as AuthenticatedPeriodoIdRouteImport } from './routes/_authenticated/periodo.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConfigRoute = ConfigRouteImport.update({
-  id: '/config',
+const AuthenticatedConfigRoute = AuthenticatedConfigRouteImport.update({
+  id: '/_authenticated/config',
   path: '/config',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EstoqueRoute = EstoqueRouteImport.update({
-  id: '/estoque',
+const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
+  id: '/_authenticated/estoque',
   path: '/estoque',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RevendaRoute = RevendaRouteImport.update({
-  id: '/revenda',
+const AuthenticatedRevendaRoute = AuthenticatedRevendaRouteImport.update({
+  id: '/_authenticated/revenda',
   path: '/revenda',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PeriodoIdRoute = PeriodoIdRouteImport.update({
-  id: '/periodo/$id',
+const AuthenticatedPeriodoIdRoute = AuthenticatedPeriodoIdRouteImport.update({
+  id: '/_authenticated/periodo/$id',
   path: '/periodo/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/config': typeof ConfigRoute
-  '/estoque': typeof EstoqueRoute
-  '/revenda': typeof RevendaRoute
-  '/periodo/$id': typeof PeriodoIdRoute
+  '/config': typeof AuthenticatedConfigRoute
+  '/estoque': typeof AuthenticatedEstoqueRoute
+  '/revenda': typeof AuthenticatedRevendaRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/periodo/$id': typeof AuthenticatedPeriodoIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/config': typeof ConfigRoute
-  '/estoque': typeof EstoqueRoute
-  '/revenda': typeof RevendaRoute
-  '/periodo/$id': typeof PeriodoIdRoute
+  '/config': typeof AuthenticatedConfigRoute
+  '/estoque': typeof AuthenticatedEstoqueRoute
+  '/revenda': typeof AuthenticatedRevendaRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/periodo/$id': typeof AuthenticatedPeriodoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/config': typeof ConfigRoute
-  '/estoque': typeof EstoqueRoute
-  '/revenda': typeof RevendaRoute
-  '/periodo/$id': typeof PeriodoIdRoute
+  '/_authenticated/config': typeof AuthenticatedConfigRoute
+  '/_authenticated/estoque': typeof AuthenticatedEstoqueRoute
+  '/_authenticated/revenda': typeof AuthenticatedRevendaRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/periodo/$id': typeof AuthenticatedPeriodoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/config' | '/estoque' | '/revenda' | '/periodo/$id'
+  fullPaths: '/config' | '/estoque' | '/revenda' | '/' | '/periodo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/config' | '/estoque' | '/revenda' | '/periodo/$id'
-  id: '__root__' | '/' | '/config' | '/estoque' | '/revenda' | '/periodo/$id'
+  to: '/config' | '/estoque' | '/revenda' | '/' | '/periodo/$id'
+  id:
+    | '__root__'
+    | '/_authenticated/config'
+    | '/_authenticated/estoque'
+    | '/_authenticated/revenda'
+    | '/_authenticated/'
+    | '/_authenticated/periodo/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ConfigRoute: typeof ConfigRoute
-  EstoqueRoute: typeof EstoqueRoute
-  RevendaRoute: typeof RevendaRoute
-  PeriodoIdRoute: typeof PeriodoIdRoute
+  AuthenticatedConfigRoute: typeof AuthenticatedConfigRoute
+  AuthenticatedEstoqueRoute: typeof AuthenticatedEstoqueRoute
+  AuthenticatedRevendaRoute: typeof AuthenticatedRevendaRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedPeriodoIdRoute: typeof AuthenticatedPeriodoIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/config': {
-      id: '/config'
+    '/_authenticated/config': {
+      id: '/_authenticated/config'
       path: '/config'
       fullPath: '/config'
-      preLoaderRoute: typeof ConfigRouteImport
+      preLoaderRoute: typeof AuthenticatedConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/estoque': {
-      id: '/estoque'
+    '/_authenticated/estoque': {
+      id: '/_authenticated/estoque'
       path: '/estoque'
       fullPath: '/estoque'
-      preLoaderRoute: typeof EstoqueRouteImport
+      preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/revenda': {
-      id: '/revenda'
+    '/_authenticated/revenda': {
+      id: '/_authenticated/revenda'
       path: '/revenda'
       fullPath: '/revenda'
-      preLoaderRoute: typeof RevendaRouteImport
+      preLoaderRoute: typeof AuthenticatedRevendaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/periodo/$id': {
-      id: '/periodo/$id'
+    '/_authenticated/periodo/$id': {
+      id: '/_authenticated/periodo/$id'
       path: '/periodo/$id'
       fullPath: '/periodo/$id'
-      preLoaderRoute: typeof PeriodoIdRouteImport
+      preLoaderRoute: typeof AuthenticatedPeriodoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ConfigRoute: ConfigRoute,
-  EstoqueRoute: EstoqueRoute,
-  RevendaRoute: RevendaRoute,
-  PeriodoIdRoute: PeriodoIdRoute,
+  AuthenticatedConfigRoute: AuthenticatedConfigRoute,
+  AuthenticatedEstoqueRoute: AuthenticatedEstoqueRoute,
+  AuthenticatedRevendaRoute: AuthenticatedRevendaRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedPeriodoIdRoute: AuthenticatedPeriodoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

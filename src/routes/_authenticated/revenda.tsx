@@ -32,7 +32,7 @@ import {
   type ResaleModel,
 } from "@/lib/resale";
 
-export const Route = createFileRoute("/revenda")({
+export const Route = createFileRoute("/_authenticated/revenda")({
   head: () => ({
     meta: [
       { title: "Revenda — notas de balcão e rateio entre empresas" },
