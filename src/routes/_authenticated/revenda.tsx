@@ -107,19 +107,20 @@ function Revenda() {
   }, [companies, sales, allocations]);
 
 
-  /** Período de referência: buscar sempre o mês passado em relação à data atual. */
+  /** Período de referência: o mês com vendas importadas mais recente, ignorando o mês atual. */
   const referencePeriod = useMemo(() => {
-    const withSales = periods.filter((p) => sales.some((s) => s.period_id === p.id));
-    
-    // Calcula qual é o mês anterior com base no dia de hoje
-    const dataAtual = new Date();
-    dataAtual.setMonth(dataAtual.getMonth() - 1);
-    const mesAnterior = `${String(dataAtual.getMonth() + 1).padStart(2, '0')}/${dataAtual.getFullYear()}`;
-    
-    // Tenta priorizar o mês anterior. Se por acaso a planilha dele ainda não existir, 
-    // usa o mais recente disponível no banco como margem de segurança (fallback).
+    // Calcula o valor numérico do mês atual (ex: Agosto de 2026 vira 202608)
+    const hoje = new Date();
+    const valorMesAtual = (hoje.getFullYear() * 100) + (hoje.getMonth() + 1);
+
+    // Filtra as vendas, exigindo que o valor do mês seja ESTRITAMENTE MENOR que o atual
+    const withSales = periods.filter((p) => 
+      sales.some((s) => s.period_id === p.id) && 
+      labelValue(p.label) < valorMesAtual
+    );
+
+    // Retorna o maior dentre os que sobraram (o mais recente olhando para trás)
     return (
-      withSales.find((p) => p.label === mesAnterior) ?? 
       withSales.sort((a, b) => labelValue(b.label) - labelValue(a.label))[0] ?? null
     );
   }, [periods, sales]);
