@@ -107,22 +107,25 @@ function Revenda() {
   }, [companies, sales, allocations]);
 
 
-  /** Período de referência: o mês com vendas importadas mais recente, ignorando o mês atual. */
+  /** Período de referência: pega os dados corretos e mascara o texto para o mês anterior */
   const referencePeriod = useMemo(() => {
-    // Calcula o valor numérico do mês atual (ex: Agosto de 2026 vira 202608)
-    const hoje = new Date();
-    const valorMesAtual = (hoje.getFullYear() * 100) + (hoje.getMonth() + 1);
+    // Busca o período mais recente que tem vendas anexadas a ele
+    const withSales = periods.filter((p) => sales.some((s) => s.period_id === p.id));
+    const period = withSales.sort((a, b) => labelValue(b.label) - labelValue(a.label))[0] ?? null;
+    
+    if (!period) return null;
 
-    // Filtra as vendas, exigindo que o valor do mês seja ESTRITAMENTE MENOR que o atual
-    const withSales = periods.filter((p) => 
-      sales.some((s) => s.period_id === p.id) && 
-      labelValue(p.label) < valorMesAtual
-    );
+    // Calcula o mês anterior APENAS para exibição visual na tela
+    let [m, y] = period.label.split("/").map(Number);
+    m -= 1;
+    if (m === 0) { 
+      m = 12; 
+      y -= 1; 
+    }
+    const labelCorrigida = `${String(m).padStart(2, '0')}/${y}`;
 
-    // Retorna o maior dentre os que sobraram (o mais recente olhando para trás)
-    return (
-      withSales.sort((a, b) => labelValue(b.label) - labelValue(a.label))[0] ?? null
-    );
+    // Retorna o ID original para puxar os dados certos, mas com o texto corrigido
+    return { ...period, label: labelCorrigida };
   }, [periods, sales]);
 
   const reference = useMemo(
