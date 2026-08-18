@@ -26,7 +26,7 @@ import { computeItem, roundShipment, totals as sumTotals } from "@/lib/calc";
 import { guessCompany, parseSalesFile, type ParsedSheet } from "@/lib/xls";
 import { RESALE_GROUPS, norm } from "@/lib/resale";
 
-import { NumberCell } from "@/routes/config";
+import { NumberCell } from "@/routes/_authenticated/config";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
