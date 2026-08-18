@@ -47,7 +47,10 @@ export function roundShipment(items: ShipmentItem[], groups: ProductGroup[]): Ro
 
   const exact = computed.map((x) => x.c.qty / (x.c.yield_per_kg as number));
   const totalKg = exact.reduce((a, b) => a + b, 0);
-  const targetKg = Math.max(computed.length, Math.round(totalKg));
+  // A nota de remessa não aceita kg quebrado: o total sempre sobe para o kg cheio
+  // seguinte (293,2 → 294) e cada item fecha em kg inteiro.
+  const EPS = 1e-9;
+  const targetKg = Math.max(computed.length, Math.ceil(totalKg - EPS));
 
   const base = exact.map((k) => Math.max(1, Math.floor(k)));
   let diff = targetKg - base.reduce((a, b) => a + b, 0);
