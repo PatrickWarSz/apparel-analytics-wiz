@@ -746,9 +746,13 @@ function ShipmentCard({
             ))}
           </SelectContent>
         </Select>
+        <Button variant="secondary" size="sm" onClick={roundAll} disabled={rounding}>
+          Arredondar
+        </Button>
         <Button variant="ghost" size="icon" onClick={copy}>
           <Copy className="size-4" />
         </Button>
+
         <Button
           variant="ghost"
           size="icon"
