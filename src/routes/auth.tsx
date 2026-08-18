@@ -47,15 +47,17 @@ function Auth() {
         if (error) throw error;
         navigate({ to: "/", replace: true });
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        if (data.session) navigate({ to: "/", replace: true });
-        else toast.success("Conta criada. Confirme o e-mail para entrar.");
+        if (data.session) {
+          navigate({ to: "/", replace: true });
+        } else {
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInError) throw signInError;
+          navigate({ to: "/", replace: true });
+        }
       }
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível entrar");
     } finally {
