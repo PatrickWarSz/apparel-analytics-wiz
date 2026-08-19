@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { int, type Company, type Period } from "@/lib/domain";
+import { int, shiftLabel, type Company, type Period } from "@/lib/domain";
 import {
   ALL_SIZES,
   fetchAllocations,
