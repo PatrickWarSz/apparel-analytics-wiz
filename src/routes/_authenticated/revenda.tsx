@@ -107,31 +107,21 @@ function Revenda() {
   }, [companies, sales, allocations]);
 
 
-  /** Período de referência: pega os dados corretos e mascara o texto para o mês anterior */
+  /** Período de referência: mês fechado mais recente com planilha importada. */
   const referencePeriod = useMemo(() => {
-    // Busca o período mais recente que tem vendas anexadas a ele
     const withSales = periods.filter((p) => sales.some((s) => s.period_id === p.id));
     const period = withSales.sort((a, b) => labelValue(b.label) - labelValue(a.label))[0] ?? null;
-    
     if (!period) return null;
-
-    // Calcula o mês anterior APENAS para exibição visual na tela
-    let [m, y] = period.label.split("/").map(Number);
-    m -= 1;
-    if (m === 0) { 
-      m = 12; 
-      y -= 1; 
-    }
-    const labelCorrigida = `${String(m).padStart(2, '0')}/${y}`;
-
-    // Retorna o ID original para puxar os dados certos, mas com o texto corrigido
-    return { ...period, label: labelCorrigida };
+    // As vendas do período foram importadas do mês anterior (mês fechado).
+    const label = period.reference_label || shiftLabel(period.label, -1);
+    return { ...period, label };
   }, [periods, sales]);
 
   const reference = useMemo(
-    () => resaleReference(sales, codeMap, referencePeriod?.id ?? null),
-    [sales, codeMap, referencePeriod],
+    () => resaleReference(sales, codeMap, referencePeriod?.id ?? null, models),
+    [sales, codeMap, referencePeriod, models],
   );
+
 
   const pendingNotes = notes.filter((n) => n.status === "pendente");
   const pendingItems = noteItems.filter((i) => pendingNotes.some((n) => n.id === i.note_id));
