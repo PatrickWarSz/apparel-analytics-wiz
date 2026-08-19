@@ -164,6 +164,7 @@ export function resaleReference(
   sales: ResaleSale[],
   codeMap: ResaleCodeMap[],
   referencePeriodId: string | null,
+  models: ResaleModel[] = [],
 ) {
   const key = (modelId: string, size: string) => `${modelId}|${norm(size)}`;
   const map = new Map<string, Map<string, number>>();
@@ -173,7 +174,11 @@ export function resaleReference(
     if (s.period_id !== referencePeriodId) continue;
     const m = codeMap.find((c) => c.company_id === s.company_id && c.code === s.code);
     if (!m?.model_id) continue;
-    const k = key(m.model_id, m.size);
+    // Se o tamanho ainda não foi confirmado, deduz pela descrição da planilha.
+    const model = models.find((x) => x.id === m.model_id);
+    const size =
+      m.size || guessSize(m.last_description || s.description, model?.sizes ?? ALL_SIZES);
+    const k = key(m.model_id, size);
     const per = map.get(k) ?? new Map<string, number>();
     per.set(s.company_id, (per.get(s.company_id) ?? 0) + s.qty);
     map.set(k, per);
@@ -182,3 +187,4 @@ export function resaleReference(
 }
 
 export const refKey = (modelId: string, size: string) => `${modelId}|${norm(size)}`;
+

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Copy, Plus, RotateCcw, Trash2, Wand2 } from "lucide-react";
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { int, type Company, type Period } from "@/lib/domain";
+import { int, shiftLabel, type Company, type Period } from "@/lib/domain";
 import {
   ALL_SIZES,
   fetchAllocations,
@@ -107,31 +107,21 @@ function Revenda() {
   }, [companies, sales, allocations]);
 
 
-  /** Período de referência: pega os dados corretos e mascara o texto para o mês anterior */
+  /** Período de referência: mês fechado mais recente com planilha importada. */
   const referencePeriod = useMemo(() => {
-    // Busca o período mais recente que tem vendas anexadas a ele
     const withSales = periods.filter((p) => sales.some((s) => s.period_id === p.id));
     const period = withSales.sort((a, b) => labelValue(b.label) - labelValue(a.label))[0] ?? null;
-    
     if (!period) return null;
-
-    // Calcula o mês anterior APENAS para exibição visual na tela
-    let [m, y] = period.label.split("/").map(Number);
-    m -= 1;
-    if (m === 0) { 
-      m = 12; 
-      y -= 1; 
-    }
-    const labelCorrigida = `${String(m).padStart(2, '0')}/${y}`;
-
-    // Retorna o ID original para puxar os dados certos, mas com o texto corrigido
-    return { ...period, label: labelCorrigida };
+    // As vendas do período foram importadas do mês anterior (mês fechado).
+    const label = period.reference_label || shiftLabel(period.label, -1);
+    return { ...period, label };
   }, [periods, sales]);
 
   const reference = useMemo(
-    () => resaleReference(sales, codeMap, referencePeriod?.id ?? null),
-    [sales, codeMap, referencePeriod],
+    () => resaleReference(sales, codeMap, referencePeriod?.id ?? null, models),
+    [sales, codeMap, referencePeriod, models],
   );
+
 
   const pendingNotes = notes.filter((n) => n.status === "pendente");
   const pendingItems = noteItems.filter((i) => pendingNotes.some((n) => n.id === i.note_id));
@@ -449,26 +439,58 @@ function Rateio({
   const key = (modelId: string, size: string, companyId: string) => `${modelId}|${size}|${companyId}`;
   const val = (k: string) => Number(alloc[k] ?? "") || 0;
 
-  const suggest = () => {
+  /** Referência por modelo (soma de todos os tamanhos) — usada quando o tamanho não tem histórico. */
+  const modelReference = useMemo(() => {
+    const map = new Map<string, Map<string, number>>();
+    for (const m of models) {
+      const per = new Map<string, number>();
+      for (const size of m.sizes.length ? m.sizes : [""]) {
+        const r = reference.get(refKey(m.id, size));
+        if (!r) continue;
+        for (const [cid, q] of r) per.set(cid, (per.get(cid) ?? 0) + q);
+      }
+      if (per.size) map.set(m.id, per);
+    }
+    return map;
+  }, [models, reference]);
+
+  /** Distribui as peças proporcionalmente à referência (maiores restos). */
+  const buildSuggestion = () => {
     const next: Record<string, string> = {};
     for (const r of rows) {
-      const per = reference.get(refKey(r.modelId, r.size));
+      const per = reference.get(refKey(r.modelId, r.size)) ?? modelReference.get(r.modelId);
       const total = per ? [...per.values()].reduce((a, b) => a + b, 0) : 0;
       if (!total) continue;
-      let left = r.qty;
-      const entries = companies
-        .map((c) => ({ c, ref: per?.get(c.id) ?? 0 }))
-        .sort((a, b) => b.ref - a.ref);
-      entries.forEach(({ c, ref }, idx) => {
-        const qty = idx === entries.length - 1 ? left : Math.round((ref / total) * r.qty);
-        const v = Math.max(Math.min(qty, left), 0);
-        left -= v;
-        if (v) next[key(r.modelId, r.size, c.id)] = String(v);
+      const parts = companies.map((c) => {
+        const exact = ((per?.get(c.id) ?? 0) / total) * r.qty;
+        return { c, base: Math.floor(exact), rest: exact - Math.floor(exact) };
       });
+      let left = r.qty - parts.reduce((a, p) => a + p.base, 0);
+      for (const p of [...parts].sort((a, b) => b.rest - a.rest)) {
+        if (left <= 0) break;
+        p.base += 1;
+        left -= 1;
+      }
+      for (const p of parts) if (p.base > 0) next[key(r.modelId, r.size, p.c.id)] = String(p.base);
     }
-    setAlloc(next);
+    return next;
+  };
+
+  const suggest = () => {
+    setAlloc(buildSuggestion());
     toast.success("Sugestão preenchida pela referência");
   };
+
+  /** Preenche sozinho assim que houver notas pendentes e referência disponível. */
+  const autoFilled = useRef("");
+  useEffect(() => {
+    const sig = rows.map((r) => `${r.modelId}|${r.size}|${r.qty}`).join(";") + `#${reference.size}`;
+    if (!rows.length || !reference.size || autoFilled.current === sig) return;
+    autoFilled.current = sig;
+    setAlloc(buildSuggestion());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, reference, companies, models]);
+
 
   const close = useMutation({
     mutationFn: async () => {
