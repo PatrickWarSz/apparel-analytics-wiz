@@ -439,26 +439,58 @@ function Rateio({
   const key = (modelId: string, size: string, companyId: string) => `${modelId}|${size}|${companyId}`;
   const val = (k: string) => Number(alloc[k] ?? "") || 0;
 
-  const suggest = () => {
+  /** Referência por modelo (soma de todos os tamanhos) — usada quando o tamanho não tem histórico. */
+  const modelReference = useMemo(() => {
+    const map = new Map<string, Map<string, number>>();
+    for (const m of models) {
+      const per = new Map<string, number>();
+      for (const size of m.sizes.length ? m.sizes : [""]) {
+        const r = reference.get(refKey(m.id, size));
+        if (!r) continue;
+        for (const [cid, q] of r) per.set(cid, (per.get(cid) ?? 0) + q);
+      }
+      if (per.size) map.set(m.id, per);
+    }
+    return map;
+  }, [models, reference]);
+
+  /** Distribui as peças proporcionalmente à referência (maiores restos). */
+  const buildSuggestion = () => {
     const next: Record<string, string> = {};
     for (const r of rows) {
-      const per = reference.get(refKey(r.modelId, r.size));
+      const per = reference.get(refKey(r.modelId, r.size)) ?? modelReference.get(r.modelId);
       const total = per ? [...per.values()].reduce((a, b) => a + b, 0) : 0;
       if (!total) continue;
-      let left = r.qty;
-      const entries = companies
-        .map((c) => ({ c, ref: per?.get(c.id) ?? 0 }))
-        .sort((a, b) => b.ref - a.ref);
-      entries.forEach(({ c, ref }, idx) => {
-        const qty = idx === entries.length - 1 ? left : Math.round((ref / total) * r.qty);
-        const v = Math.max(Math.min(qty, left), 0);
-        left -= v;
-        if (v) next[key(r.modelId, r.size, c.id)] = String(v);
+      const parts = companies.map((c) => {
+        const exact = ((per?.get(c.id) ?? 0) / total) * r.qty;
+        return { c, base: Math.floor(exact), rest: exact - Math.floor(exact) };
       });
+      let left = r.qty - parts.reduce((a, p) => a + p.base, 0);
+      for (const p of [...parts].sort((a, b) => b.rest - a.rest)) {
+        if (left <= 0) break;
+        p.base += 1;
+        left -= 1;
+      }
+      for (const p of parts) if (p.base > 0) next[key(r.modelId, r.size, p.c.id)] = String(p.base);
     }
-    setAlloc(next);
+    return next;
+  };
+
+  const suggest = () => {
+    setAlloc(buildSuggestion());
     toast.success("Sugestão preenchida pela referência");
   };
+
+  /** Preenche sozinho assim que houver notas pendentes e referência disponível. */
+  const autoFilled = useRef("");
+  useEffect(() => {
+    const sig = rows.map((r) => `${r.modelId}|${r.size}|${r.qty}`).join(";") + `#${reference.size}`;
+    if (!rows.length || !reference.size || autoFilled.current === sig) return;
+    autoFilled.current = sig;
+    setAlloc(buildSuggestion());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, reference, companies, models]);
+
 
   const close = useMutation({
     mutationFn: async () => {
