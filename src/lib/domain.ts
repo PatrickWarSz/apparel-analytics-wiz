@@ -93,28 +93,40 @@ export const DEFAULT_FACTORIES = [
   { name: "RAFAEL", monthly_limit: 3000 },
 ];
 
+let seedInFlight: Promise<void> | null = null;
+
 /** Cria os cadastros iniciais caso o usuário ainda não tenha nenhum. */
 export async function ensureSeed() {
-  const [{ count: companies }, { count: groups }, { count: factories }] = await Promise.all([
-    supabase.from("companies").select("id", { count: "exact", head: true }),
-    supabase.from("product_groups").select("id", { count: "exact", head: true }),
-    supabase.from("factories").select("id", { count: "exact", head: true }),
-  ]);
+  // evita que duas chamadas simultâneas (StrictMode, navegação rápida, etc.)
+  // vejam a tabela "vazia" ao mesmo tempo e insiram os padrões em dobro
+  if (seedInFlight) return seedInFlight;
 
-  if (!companies) {
-    await supabase
-      .from("companies")
-      .insert(DEFAULT_COMPANIES.map((c, i) => ({ ...c, sort_order: i + 1 })));
-  }
-  if (!groups) {
-    await supabase
-      .from("product_groups")
-      .insert(DEFAULT_GROUPS);
-  }
-  if (!factories) {
-    await supabase
-      .from("factories")
-      .insert(DEFAULT_FACTORIES.map((f, i) => ({ ...f, sort_order: i + 1 })));
+  seedInFlight = (async () => {
+    const [{ data: companies }, { count: groups }, { data: factories }] = await Promise.all([
+      supabase.from("companies").select("name"),
+      supabase.from("product_groups").select("id", { count: "exact", head: true }),
+      supabase.from("factories").select("name"),
+    ]);
+
+    if (!companies || companies.length === 0) {
+      await supabase
+        .from("companies")
+        .insert(DEFAULT_COMPANIES.map((c, i) => ({ ...c, sort_order: i + 1 })));
+    }
+    if (!groups) {
+      await supabase.from("product_groups").insert(DEFAULT_GROUPS);
+    }
+    if (!factories || factories.length === 0) {
+      await supabase
+        .from("factories")
+        .insert(DEFAULT_FACTORIES.map((f, i) => ({ ...f, sort_order: i + 1 })));
+    }
+  })();
+
+  try {
+    await seedInFlight;
+  } finally {
+    seedInFlight = null;
   }
 }
 
