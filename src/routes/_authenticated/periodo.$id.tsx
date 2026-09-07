@@ -363,9 +363,13 @@ function SalesTable({
   const qc = useQueryClient();
 
   const groupNames = useMemo(() => {
-    const names = groups.map((g) => g.name);
-    for (const s of sales) if (!names.includes(s.group_name)) names.push(s.group_name);
-    return names;
+    const names = new Map<string, string>();
+    for (const group of groups) names.set(group.name.trim().toUpperCase(), group.name);
+    for (const row of sales) {
+      const key = row.group_name.trim().toUpperCase();
+      if (!names.has(key)) names.set(key, row.group_name);
+    }
+    return [...names.values()];
   }, [groups, sales]);
 
   const kindOf = (name: string) => groups.find((g) => g.name === name)?.kind ?? "propria";
