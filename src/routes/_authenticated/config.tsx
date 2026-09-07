@@ -175,7 +175,7 @@ function Groups() {
           onChange={(e) => setName(e.target.value)}
           className="max-w-xs"
         />
-        <Button variant="secondary" disabled={!name.trim()} onClick={() => add.mutate()}>
+        <Button variant="secondary" disabled={!name.trim() || add.isPending} onClick={() => add.mutate()}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>
@@ -241,6 +241,7 @@ function Companies() {
       setName("");
       qc.invalidateQueries({ queryKey: ["companies"] });
     },
+    onError: (e: Error) => toast.error(e.message.includes("duplicate") ? "Empresa já existe" : e.message),
   });
   const remove = useMutation({
     mutationFn: async (id: string) => {
@@ -283,7 +284,7 @@ function Companies() {
       </Table>
       <div className="mt-4 flex gap-2">
         <Input placeholder="Nova empresa" value={name} onChange={(e) => setName(e.target.value)} />
-        <Button variant="secondary" disabled={!name.trim()} onClick={() => add.mutate()}>
+        <Button variant="secondary" disabled={!name.trim() || add.isPending} onClick={() => add.mutate()}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>
@@ -316,6 +317,7 @@ function Factories() {
       setName("");
       qc.invalidateQueries({ queryKey: ["factories"] });
     },
+    onError: (e: Error) => toast.error(e.message.includes("duplicate") ? "Facção já existe" : e.message),
   });
   const remove = useMutation({
     mutationFn: async (id: string) => {
@@ -359,7 +361,7 @@ function Factories() {
       </Table>
       <div className="mt-4 flex gap-2">
         <Input placeholder="Nova facção" value={name} onChange={(e) => setName(e.target.value)} />
-        <Button variant="secondary" disabled={!name.trim()} onClick={() => add.mutate()}>
+        <Button variant="secondary" disabled={!name.trim() || add.isPending} onClick={() => add.mutate()}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>

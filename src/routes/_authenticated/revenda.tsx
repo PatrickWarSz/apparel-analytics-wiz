@@ -258,7 +258,8 @@ function Notes({
       setDraft([{ modelId: "", size: "", qty: "" }]);
       onChange();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) =>
+      toast.error(e.message.includes("duplicate") ? "Modelo já existe" : e.message),
   });
 
   const remove = useMutation({
@@ -943,7 +944,7 @@ function Models({ models, onChange }: { models: ResaleModel[]; onChange: () => v
           className="w-72"
           onChange={(e) => setName(e.target.value)}
         />
-        <Button variant="secondary" onClick={() => add.mutate()}>
+        <Button variant="secondary" disabled={!name.trim() || add.isPending} onClick={() => add.mutate()}>
           <Plus className="size-4" /> Adicionar
         </Button>
       </div>
