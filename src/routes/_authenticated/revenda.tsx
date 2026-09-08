@@ -82,6 +82,14 @@ function Revenda() {
     },
   });
   const { data: models = [] } = useQuery({ queryKey: ["resale_models"], queryFn: fetchModels });
+  const { data: ownGroups = [] } = useQuery({
+    queryKey: ["product_groups"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("product_groups").select("*").order("sort_order");
+      if (error) throw error;
+      return (data ?? []).filter((g) => g.kind === "propria").map((g) => g.name as string);
+    },
+  });
   const { data: codeMap = [] } = useQuery({ queryKey: ["resale_code_map"], queryFn: fetchCodeMap });
   const { data: sales = [] } = useQuery({ queryKey: ["resale_sales"], queryFn: fetchResaleSales });
   const { data: notes = [] } = useQuery({ queryKey: ["counter_notes"], queryFn: fetchNotes });
