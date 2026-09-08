@@ -807,6 +807,7 @@ function Codes({
                 <TableHead className="w-24 text-right">Vendidas</TableHead>
                 <TableHead className="w-72">Modelo</TableHead>
                 <TableHead className="w-28">Tamanho</TableHead>
+                <TableHead className="w-52">Fabricação própria</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
