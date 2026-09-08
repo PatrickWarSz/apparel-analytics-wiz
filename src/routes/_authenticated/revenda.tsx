@@ -752,7 +752,7 @@ function Codes({
 
   const autoFill = useMutation({
     mutationFn: async () => {
-      const pending = codeMap.filter((c) => !c.model_id);
+      const pending = codeMap.filter((c) => !c.model_id && !c.is_own);
       for (const c of pending) {
         const model = guessModel(c.last_description, models);
         if (!model) continue;
