@@ -720,6 +720,7 @@ function Codes({
   models,
   companies,
   sales,
+  ownGroups,
   onChange,
 }: {
   codeMap: ReturnType<typeof useQuery<Awaited<ReturnType<typeof fetchCodeMap>>>>["data"] extends undefined
@@ -728,13 +729,20 @@ function Codes({
   models: ResaleModel[];
   companies: Company[];
   sales: Awaited<ReturnType<typeof fetchResaleSales>>;
+  ownGroups: string[];
   onChange: () => void;
 }) {
   const [showAll, setShowAll] = useState(false);
-  const list = showAll ? codeMap : codeMap.filter((c) => !c.model_id);
+  const list = showAll ? codeMap : codeMap.filter((c) => !c.model_id && !c.is_own);
 
   const save = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: { model_id?: string; size?: string } }) => {
+    mutationFn: async ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: { model_id?: string | null; size?: string; is_own?: boolean; own_group?: string };
+    }) => {
       const { error } = await supabase.from("resale_code_map").update(patch).eq("id", id);
       if (error) throw error;
     },
