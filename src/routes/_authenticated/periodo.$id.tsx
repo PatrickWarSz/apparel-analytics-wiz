@@ -237,8 +237,9 @@ function Importer({
           if (!target) continue;
           const from = totals[line.group];
           if (from) {
-            totals[line.group] = { qty: from.qty - line.qty, fromSets: from.fromSets };
-            if (totals[line.group].qty <= 0) delete totals[line.group];
+            const qty = from.qty - line.qty;
+            if (qty > 0) totals[line.group] = { qty, fromSets: from.fromSets };
+            else delete totals[line.group];
           }
           const to = (totals[target] ??= { qty: 0, fromSets: 0 });
           to.qty += line.qty;
