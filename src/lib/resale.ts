@@ -14,6 +14,10 @@ export type ResaleCodeMap = {
   model_id: string | null;
   size: string;
   last_description: string;
+  /** Código que na verdade é produto de fabricação própria (não entra na revenda). */
+  is_own: boolean;
+  /** Grupo de fabricação própria para onde a quantidade desse código deve ir. */
+  own_group: string;
 };
 
 export type ResaleSale = {
