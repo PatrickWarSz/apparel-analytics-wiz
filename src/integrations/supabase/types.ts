@@ -278,8 +278,10 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          is_own: boolean
           last_description: string
           model_id: string | null
+          own_group: string
           size: string
         }
         Insert: {
@@ -287,8 +289,10 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          is_own?: boolean
           last_description?: string
           model_id?: string | null
+          own_group?: string
           size?: string
         }
         Update: {
@@ -296,8 +300,10 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          is_own?: boolean
           last_description?: string
           model_id?: string | null
+          own_group?: string
           size?: string
         }
         Relationships: [
