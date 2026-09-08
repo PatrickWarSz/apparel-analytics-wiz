@@ -82,6 +82,14 @@ function Revenda() {
     },
   });
   const { data: models = [] } = useQuery({ queryKey: ["resale_models"], queryFn: fetchModels });
+  const { data: ownGroups = [] } = useQuery({
+    queryKey: ["product_groups"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("product_groups").select("*").order("sort_order");
+      if (error) throw error;
+      return (data ?? []).filter((g) => g.kind === "propria").map((g) => g.name as string);
+    },
+  });
   const { data: codeMap = [] } = useQuery({ queryKey: ["resale_code_map"], queryFn: fetchCodeMap });
   const { data: sales = [] } = useQuery({ queryKey: ["resale_sales"], queryFn: fetchResaleSales });
   const { data: notes = [] } = useQuery({ queryKey: ["counter_notes"], queryFn: fetchNotes });
@@ -125,7 +133,7 @@ function Revenda() {
 
   const pendingNotes = notes.filter((n) => n.status === "pendente");
   const pendingItems = noteItems.filter((i) => pendingNotes.some((n) => n.id === i.note_id));
-  const unmapped = codeMap.filter((c) => !c.model_id);
+  const unmapped = codeMap.filter((c) => !c.model_id && !c.is_own);
 
   return (
     <div className="space-y-6">
@@ -184,6 +192,7 @@ function Revenda() {
             models={models}
             companies={companies}
             sales={sales}
+            ownGroups={ownGroups}
             onChange={() => refresh(["resale_code_map"])}
           />
         </TabsContent>
@@ -711,6 +720,7 @@ function Codes({
   models,
   companies,
   sales,
+  ownGroups,
   onChange,
 }: {
   codeMap: ReturnType<typeof useQuery<Awaited<ReturnType<typeof fetchCodeMap>>>>["data"] extends undefined
@@ -719,13 +729,20 @@ function Codes({
   models: ResaleModel[];
   companies: Company[];
   sales: Awaited<ReturnType<typeof fetchResaleSales>>;
+  ownGroups: string[];
   onChange: () => void;
 }) {
   const [showAll, setShowAll] = useState(false);
-  const list = showAll ? codeMap : codeMap.filter((c) => !c.model_id);
+  const list = showAll ? codeMap : codeMap.filter((c) => !c.model_id && !c.is_own);
 
   const save = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: { model_id?: string; size?: string } }) => {
+    mutationFn: async ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: { model_id?: string | null; size?: string; is_own?: boolean; own_group?: string };
+    }) => {
       const { error } = await supabase.from("resale_code_map").update(patch).eq("id", id);
       if (error) throw error;
     },
@@ -735,7 +752,7 @@ function Codes({
 
   const autoFill = useMutation({
     mutationFn: async () => {
-      const pending = codeMap.filter((c) => !c.model_id);
+      const pending = codeMap.filter((c) => !c.model_id && !c.is_own);
       for (const c of pending) {
         const model = guessModel(c.last_description, models);
         if (!model) continue;
@@ -790,6 +807,7 @@ function Codes({
                 <TableHead className="w-24 text-right">Vendidas</TableHead>
                 <TableHead className="w-72">Modelo</TableHead>
                 <TableHead className="w-28">Tamanho</TableHead>
+                <TableHead className="w-52">Fabricação própria</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -839,6 +857,43 @@ function Codes({
                           ))}
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell>
+                      {c.is_own ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">{c.own_group || "própria"}</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              save.mutate({ id: c.id, patch: { is_own: false, own_group: "" } })
+                            }
+                          >
+                            <RotateCcw className="size-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Select
+                          value=""
+                          onValueChange={(v) =>
+                            save.mutate({
+                              id: c.id,
+                              patch: { is_own: true, own_group: v, model_id: null, size: "" },
+                            })
+                          }
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Não é revenda…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ownGroups.map((g) => (
+                              <SelectItem key={g} value={g}>
+                                {g}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </TableCell>
                   </TableRow>
                 );

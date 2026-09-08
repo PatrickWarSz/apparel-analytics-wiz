@@ -220,12 +220,37 @@ function Importer({
     mutationFn: async () => {
       for (const sheet of staged) {
         if (!sheet.companyId) continue;
+
+        // Códigos já marcados como fabricação própria saem da revenda e vão
+        // para o grupo próprio escolhido (ex.: KIT CALCINHA SECRET).
+        const { data: ownRows } = await supabase
+          .from("resale_code_map")
+          .select("code, own_group")
+          .eq("company_id", sheet.companyId)
+          .eq("is_own", true);
+        const ownByCode = new Map(
+          (ownRows ?? []).map((r) => [String(r.code), String(r.own_group || "")]),
+        );
+        const totals = { ...sheet.totals };
+        for (const line of sheet.lines) {
+          const target = ownByCode.get(line.code);
+          if (!target) continue;
+          const from = totals[line.group];
+          if (from) {
+            const qty = from.qty - line.qty;
+            if (qty > 0) totals[line.group] = { qty, fromSets: from.fromSets };
+            else delete totals[line.group];
+          }
+          const to = (totals[target] ??= { qty: 0, fromSets: 0 });
+          to.qty += line.qty;
+        }
+
         await supabase
           .from("sales_totals")
           .delete()
           .eq("period_id", periodId)
           .eq("company_id", sheet.companyId);
-        const rows = Object.entries(sheet.totals).map(([group_name, t]) => ({
+        const rows = Object.entries(totals).map(([group_name, t]) => ({
           period_id: periodId,
           company_id: sheet.companyId!,
           group_name,
@@ -238,7 +263,9 @@ function Importer({
         }
 
         // linhas de revenda (por código) para o módulo de Revenda
-        const resaleLines = sheet.lines.filter((l) => resaleNames.has(norm(l.group)));
+        const resaleLines = sheet.lines.filter(
+          (l) => resaleNames.has(norm(l.group)) && !ownByCode.has(l.code),
+        );
         await supabase
           .from("resale_sales")
           .delete()

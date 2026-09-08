@@ -8,6 +8,13 @@
       "when": 1788791733736,
       "tag": "0000_prevent_duplicate_catalog_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788870269757,
+      "tag": "0001_resale_code_own_production",
+      "breakpoints": true
     }
   ]
 }
