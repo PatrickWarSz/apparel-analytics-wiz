@@ -192,6 +192,7 @@ function Revenda() {
             models={models}
             companies={companies}
             sales={sales}
+            ownGroups={ownGroups}
             onChange={() => refresh(["resale_code_map"])}
           />
         </TabsContent>
