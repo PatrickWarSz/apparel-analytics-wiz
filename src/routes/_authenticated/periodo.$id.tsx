@@ -263,7 +263,9 @@ function Importer({
         }
 
         // linhas de revenda (por código) para o módulo de Revenda
-        const resaleLines = sheet.lines.filter((l) => resaleNames.has(norm(l.group)));
+        const resaleLines = sheet.lines.filter(
+          (l) => resaleNames.has(norm(l.group)) && !ownByCode.has(l.code),
+        );
         await supabase
           .from("resale_sales")
           .delete()
