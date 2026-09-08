@@ -133,7 +133,7 @@ function Revenda() {
 
   const pendingNotes = notes.filter((n) => n.status === "pendente");
   const pendingItems = noteItems.filter((i) => pendingNotes.some((n) => n.id === i.note_id));
-  const unmapped = codeMap.filter((c) => !c.model_id);
+  const unmapped = codeMap.filter((c) => !c.model_id && !c.is_own);
 
   return (
     <div className="space-y-6">
