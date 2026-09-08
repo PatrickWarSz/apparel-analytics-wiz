@@ -858,6 +858,43 @@ function Codes({
                         </SelectContent>
                       </Select>
                     </TableCell>
+                    <TableCell>
+                      {c.is_own ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">{c.own_group || "própria"}</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              save.mutate({ id: c.id, patch: { is_own: false, own_group: "" } })
+                            }
+                          >
+                            <RotateCcw className="size-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Select
+                          value=""
+                          onValueChange={(v) =>
+                            save.mutate({
+                              id: c.id,
+                              patch: { is_own: true, own_group: v, model_id: null, size: "" },
+                            })
+                          }
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Não é revenda…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ownGroups.map((g) => (
+                              <SelectItem key={g} value={g}>
+                                {g}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </TableCell>
                   </TableRow>
                 );
               })}
