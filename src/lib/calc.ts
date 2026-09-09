@@ -46,38 +46,11 @@ export function roundShipment(items: ShipmentItem[], groups: ProductGroup[]): Ro
   if (!computed.length) return [];
 
   const exact = computed.map((x) => x.c.qty / (x.c.yield_per_kg as number));
-  const totalKg = exact.reduce((a, b) => a + b, 0);
-  // A nota de remessa não aceita kg quebrado: o total sempre sobe para o kg cheio
-  // seguinte (293,2 → 294) e cada item fecha em kg inteiro.
+  // Regra fiscal: nunca produzir menos do que foi vendido. Cada item sobe para o
+  // kg cheio seguinte (nunca desce), garantindo peças >= vendas e total inteiro.
   const EPS = 1e-9;
-  const targetKg = Math.max(computed.length, Math.ceil(totalKg - EPS));
+  const base = exact.map((k) => Math.max(1, Math.ceil(k - EPS)));
 
-  const base = exact.map((k) => Math.max(1, Math.floor(k)));
-  let diff = targetKg - base.reduce((a, b) => a + b, 0);
-
-  const order = exact
-    .map((k, idx) => ({ idx, rest: k - Math.floor(k), size: k }))
-    .sort((a, b) => b.rest - a.rest || b.size - a.size);
-
-  let i = 0;
-  while (diff > 0) {
-    base[order[i % order.length]!.idx] = base[order[i % order.length]!.idx]! + 1;
-    diff--;
-    i++;
-  }
-  // remove kg dos itens com menor resto, sem zerar ninguém
-  const reverse = [...order].reverse();
-  i = 0;
-  let guard = 0;
-  while (diff < 0 && guard < 10000) {
-    const idx = reverse[i % reverse.length]!.idx;
-    if (base[idx]! > 1) {
-      base[idx] = base[idx]! - 1;
-      diff++;
-    }
-    i++;
-    guard++;
-  }
 
   return computed.map((x, n) => ({
     id: x.item.id,
