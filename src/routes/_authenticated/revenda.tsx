@@ -31,6 +31,8 @@ import {
   type ResaleAllocation,
   type ResaleModel,
 } from "@/lib/resale";
+import { friendlyError } from "@/lib/dbError";
+
 
 export const Route = createFileRoute("/_authenticated/revenda")({
   head: () => ({
@@ -528,23 +530,51 @@ function Rateio({
         .select("id")
         .single();
       if (error) throw error;
+
+      // Primeiro "reserva" as notas pendentes: se outra aba já fechou o ciclo,
+      // nada é reservado e desfazemos este ciclo em vez de duplicar o rateio.
+      const { data: claimed, error: notesError } = await supabase
+        .from("counter_notes")
+        .update({ status: "faturada", cycle_id: data.id })
+        .in("id", pendingNoteIds)
+        .eq("status", "pendente")
+        .select("id");
+      if (notesError) {
+        await supabase.from("resale_cycles").delete().eq("id", data.id);
+        throw notesError;
+      }
+      if ((claimed?.length ?? 0) !== pendingNoteIds.length) {
+        await supabase
+          .from("counter_notes")
+          .update({ status: "pendente", cycle_id: null })
+          .eq("cycle_id", data.id);
+        await supabase.from("resale_cycles").delete().eq("id", data.id);
+        throw new Error("Essas notas já foram fechadas em outro ciclo. Atualize a tela.");
+      }
+
       const { error: allocError } = await supabase
         .from("resale_cycle_allocations")
         .insert(payload.map((p) => ({ ...p, cycle_id: data.id })));
-      if (allocError) throw allocError;
-      const { error: notesError } = await supabase
-        .from("counter_notes")
-        .update({ status: "faturada", cycle_id: data.id })
-        .in("id", pendingNoteIds);
-      if (notesError) throw notesError;
+      if (allocError) {
+        await supabase
+          .from("counter_notes")
+          .update({ status: "pendente", cycle_id: null })
+          .eq("cycle_id", data.id);
+        await supabase.from("resale_cycles").delete().eq("id", data.id);
+        throw allocError;
+      }
     },
     onSuccess: () => {
       toast.success("Ciclo fechado — mensagem disponível no histórico");
       setAlloc({});
       onClosed();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      toast.error(friendlyError(e));
+      onClosed();
+    },
   });
+
 
   if (!rows.length) {
     return (
