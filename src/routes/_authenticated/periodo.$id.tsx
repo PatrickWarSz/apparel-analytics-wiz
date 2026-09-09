@@ -575,6 +575,8 @@ function Shipments({
           })
           .select()
           .single();
+        // Outra aba (ou um clique duplo) já criou a remessa dessa empresa: apenas ignora.
+        if (error && isDuplicate(error)) continue;
         if (error) throw error;
         const shipment = data as Shipment;
         const payload = rows
@@ -591,7 +593,7 @@ function Shipments({
             };
           });
         const { error: itemsError } = await supabase.from("shipment_items").insert(payload);
-        if (itemsError) throw itemsError;
+        if (itemsError && !isDuplicate(itemsError)) throw itemsError;
         created++;
       }
       return created;
@@ -600,8 +602,12 @@ function Shipments({
       toast.success(created ? `${created} remessa(s) gerada(s)` : "Nada novo para gerar");
       refresh();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      toast.error(friendlyError(e));
+      refresh();
+    },
   });
+
 
   const addExtra = useMutation({
     mutationFn: async () => {
