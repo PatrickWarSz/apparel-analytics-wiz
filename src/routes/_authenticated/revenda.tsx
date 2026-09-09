@@ -31,6 +31,8 @@ import {
   type ResaleAllocation,
   type ResaleModel,
 } from "@/lib/resale";
+import { friendlyError } from "@/lib/dbError";
+
 
 export const Route = createFileRoute("/_authenticated/revenda")({
   head: () => ({
