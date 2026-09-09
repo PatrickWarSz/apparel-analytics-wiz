@@ -722,6 +722,7 @@ function ShipmentCard({
 }) {
   const [newGroup, setNewGroup] = useState("");
   const [rounding, setRounding] = useState(false);
+  const [lastRound, setLastRound] = useState<{ id: string; from: number; to: number }[] | null>(null);
   const computed = items.map((i) => computeItem(i, groups));
   const total = sumTotals(computed);
   const fabricValue = total.kg * period.fabric_price_per_kg;
@@ -740,19 +741,37 @@ function ShipmentCard({
       return;
     }
     setRounding(true);
+    const done: { id: string; from: number; to: number }[] = [];
     for (const r of changed) {
       const { error } = await supabase.from("shipment_items").update({ qty: r.to }).eq("id", r.id);
       if (error) {
         toast.error(error.message);
         break;
       }
+      done.push({ id: r.id, from: r.from, to: r.to });
     }
     setRounding(false);
-    toast.success(
-      `Arredondado: ${changed.map((r) => `${r.group_name} ${r.from}→${r.to} (${r.kg} kg)`).join(" · ")}`,
-    );
+    if (done.length) setLastRound(done);
     onChange();
   };
+
+  const undoRound = async () => {
+    if (!lastRound) return;
+    setRounding(true);
+    for (const r of lastRound) {
+      const { error } = await supabase.from("shipment_items").update({ qty: r.from }).eq("id", r.id);
+      if (error) {
+        toast.error(error.message);
+        break;
+      }
+    }
+    setRounding(false);
+    setLastRound(null);
+    onChange();
+  };
+
+  const roundAdded = lastRound?.reduce((a, r) => a + (r.to - r.from), 0) ?? 0;
+
 
 
   const copy = () => {
@@ -812,6 +831,22 @@ function ShipmentCard({
         <Button variant="secondary" size="sm" onClick={roundAll} disabled={rounding}>
           Arredondar
         </Button>
+        {lastRound && (
+          <span className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="num">
+              {roundAdded > 0 ? `+${int(roundAdded)} pç no arredondamento` : "sem acréscimo de peças"}
+            </span>
+            <button
+              type="button"
+              onClick={undoRound}
+              disabled={rounding}
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              reverter
+            </button>
+          </span>
+        )}
+
         <Button variant="ghost" size="icon" onClick={copy}>
           <Copy className="size-4" />
         </Button>
