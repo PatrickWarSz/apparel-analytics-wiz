@@ -831,6 +831,22 @@ function ShipmentCard({
         <Button variant="secondary" size="sm" onClick={roundAll} disabled={rounding}>
           Arredondar
         </Button>
+        {lastRound && (
+          <span className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="num">
+              {roundAdded > 0 ? `+${int(roundAdded)} pç no arredondamento` : "sem acréscimo de peças"}
+            </span>
+            <button
+              type="button"
+              onClick={undoRound}
+              disabled={rounding}
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              reverter
+            </button>
+          </span>
+        )}
+
         <Button variant="ghost" size="icon" onClick={copy}>
           <Copy className="size-4" />
         </Button>
