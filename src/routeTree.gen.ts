@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedConfigRouteImport } from './routes/_authenticated/config'
 import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
+import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedRevendaRouteImport } from './routes/_authenticated/revenda'
 import { Route as AuthenticatedPeriodoIdRouteImport } from './routes/_authenticated/periodo.$id'
 
@@ -41,6 +42,11 @@ const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
   path: '/estoque',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRevendaRoute = AuthenticatedRevendaRouteImport.update({
   id: '/revenda',
   path: '/revenda',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/config': typeof AuthenticatedConfigRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
+  '/painel': typeof AuthenticatedPainelRoute
   '/revenda': typeof AuthenticatedRevendaRoute
   '/periodo/$id': typeof AuthenticatedPeriodoIdRoute
 }
@@ -64,6 +71,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/config': typeof AuthenticatedConfigRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
+  '/painel': typeof AuthenticatedPainelRoute
   '/revenda': typeof AuthenticatedRevendaRoute
   '/': typeof AuthenticatedIndexRoute
   '/periodo/$id': typeof AuthenticatedPeriodoIdRoute
@@ -74,6 +82,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/config': typeof AuthenticatedConfigRoute
   '/_authenticated/estoque': typeof AuthenticatedEstoqueRoute
+  '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/revenda': typeof AuthenticatedRevendaRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/periodo/$id': typeof AuthenticatedPeriodoIdRoute
@@ -81,15 +90,29 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/config' | '/estoque' | '/revenda' | '/periodo/$id'
+    | '/'
+    | '/auth'
+    | '/config'
+    | '/estoque'
+    | '/painel'
+    | '/revenda'
+    | '/periodo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/config' | '/estoque' | '/revenda' | '/' | '/periodo/$id'
+  to:
+    | '/auth'
+    | '/config'
+    | '/estoque'
+    | '/painel'
+    | '/revenda'
+    | '/'
+    | '/periodo/$id'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/config'
     | '/_authenticated/estoque'
+    | '/_authenticated/painel'
     | '/_authenticated/revenda'
     | '/_authenticated/'
     | '/_authenticated/periodo/$id'
@@ -137,6 +160,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/painel': {
+      id: '/_authenticated/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof AuthenticatedPainelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/revenda': {
       id: '/_authenticated/revenda'
       path: '/revenda'
@@ -157,6 +187,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfigRoute: typeof AuthenticatedConfigRoute
   AuthenticatedEstoqueRoute: typeof AuthenticatedEstoqueRoute
+  AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedRevendaRoute: typeof AuthenticatedRevendaRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedPeriodoIdRoute: typeof AuthenticatedPeriodoIdRoute
@@ -165,6 +196,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfigRoute: AuthenticatedConfigRoute,
   AuthenticatedEstoqueRoute: AuthenticatedEstoqueRoute,
+  AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedRevendaRoute: AuthenticatedRevendaRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedPeriodoIdRoute: AuthenticatedPeriodoIdRoute,
