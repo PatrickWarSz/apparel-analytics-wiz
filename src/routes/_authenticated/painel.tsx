@@ -62,7 +62,7 @@ function Card({
   label: string;
   value: string;
   hint?: string;
-  tone?: "accent" | "destructive";
+  tone?: "accent" | "destructive" | undefined;
 }) {
   return (
     <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
