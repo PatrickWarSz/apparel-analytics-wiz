@@ -450,6 +450,7 @@ function Rateio({
   pendingItems,
   pendingNoteIds,
   reference,
+  deficit,
   referenceLabel,
   onClosed,
 }: {
@@ -457,6 +458,7 @@ function Rateio({
   companies: Company[];
   pendingItems: CounterNoteItem[];
   pendingNoteIds: string[];
+  deficit: Map<string, Map<string, number>>;
   reference: Map<string, Map<string, number>>;
   referenceLabel: string | null;
   onClosed: () => void;
