@@ -500,31 +500,59 @@ function Rateio({
     return map;
   }, [models, reference]);
 
-  /** Distribui as peças proporcionalmente à referência (maiores restos). */
+  /** Saldo em aberto (vendido − já entrado em nota no mês) por modelo+tamanho. */
+  const openBalance = (modelId: string, size: string) => deficit.get(refKey(modelId, size));
+
+  /**
+   * Cobre primeiro quem ainda está com nota atrasada (vendeu mais do que entrou)
+   * e só depois distribui o que sobrar pela proporção histórica.
+   */
   const buildSuggestion = () => {
     const next: Record<string, string> = {};
     for (const r of rows) {
-      const per = reference.get(refKey(r.modelId, r.size)) ?? modelReference.get(r.modelId);
-      const total = per ? [...per.values()].reduce((a, b) => a + b, 0) : 0;
-      if (!total) continue;
-      const parts = companies.map((c) => {
-        const exact = ((per?.get(c.id) ?? 0) / total) * r.qty;
-        return { c, base: Math.floor(exact), rest: exact - Math.floor(exact) };
-      });
-      let left = r.qty - parts.reduce((a, p) => a + p.base, 0);
-      for (const p of [...parts].sort((a, b) => b.rest - a.rest)) {
-        if (left <= 0) break;
-        p.base += 1;
-        left -= 1;
+      const result = new Map<string, number>();
+      let left = r.qty;
+
+      const need = openBalance(r.modelId, r.size);
+      if (need) {
+        for (const [cid, qty] of [...need.entries()].sort((a, b) => b[1] - a[1])) {
+          if (left <= 0) break;
+          if (!companies.some((c) => c.id === cid)) continue;
+          const take = Math.min(left, qty);
+          result.set(cid, (result.get(cid) ?? 0) + take);
+          left -= take;
+        }
       }
-      for (const p of parts) if (p.base > 0) next[key(r.modelId, r.size, p.c.id)] = String(p.base);
+
+      if (left > 0) {
+        const per = reference.get(refKey(r.modelId, r.size)) ?? modelReference.get(r.modelId);
+        const total = per ? [...per.values()].reduce((a, b) => a + b, 0) : 0;
+        if (total) {
+          const remaining = left;
+          const parts = companies.map((c) => {
+            const exact = ((per?.get(c.id) ?? 0) / total) * remaining;
+            return { c, base: Math.floor(exact), rest: exact - Math.floor(exact) };
+          });
+          left = remaining - parts.reduce((a, p) => a + p.base, 0);
+          for (const p of [...parts].sort((a, b) => b.rest - a.rest)) {
+            if (left <= 0) break;
+            p.base += 1;
+            left -= 1;
+          }
+          for (const p of parts)
+            if (p.base > 0) result.set(p.c.id, (result.get(p.c.id) ?? 0) + p.base);
+        }
+      }
+
+      for (const [cid, qty] of result)
+        if (qty > 0) next[key(r.modelId, r.size, cid)] = String(qty);
     }
     return next;
   };
 
   const suggest = () => {
     setAlloc(buildSuggestion());
-    toast.success("Sugestão preenchida pela referência");
+    toast.success("Sugestão preenchida pelo saldo em aberto");
   };
 
   /** Preenche sozinho assim que houver notas pendentes e referência disponível. */
