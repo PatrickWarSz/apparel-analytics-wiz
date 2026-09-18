@@ -558,12 +558,14 @@ function Rateio({
   /** Preenche sozinho assim que houver notas pendentes e referência disponível. */
   const autoFilled = useRef("");
   useEffect(() => {
-    const sig = rows.map((r) => `${r.modelId}|${r.size}|${r.qty}`).join(";") + `#${reference.size}`;
+    const sig =
+      rows.map((r) => `${r.modelId}|${r.size}|${r.qty}`).join(";") +
+      `#${reference.size}#${deficit.size}`;
     if (!rows.length || !reference.size || autoFilled.current === sig) return;
     autoFilled.current = sig;
     setAlloc(buildSuggestion());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, reference, companies, models]);
+  }, [rows, reference, deficit, companies, models]);
 
 
   const close = useMutation({
