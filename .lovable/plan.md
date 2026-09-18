@@ -1,62 +1,43 @@
-# Sugestões de melhorias práticas
+# Revenda: equilíbrio entre o que foi vendido e o que entrou em nota
 
-Objetivo: manter o sistema enxuto, mas acrescentar controles que reduzam risco de erro e ajudem na tomada de decisão da operação.
+Hoje o rateio do ciclo divide as peças da nota só pela **porcentagem** do mês de referência. Isso explica o desequilíbrio que você viu: se a CR vendeu 1.000 e a RC 10, a divisão respeita a proporção do ciclo, mas ninguém está somando o acumulado — então uma empresa pode terminar o mês com menos nota do que vendeu e a outra com sobra virando estoque.
 
-## O que já está maduro
-- Importação de planilhas, destrincho de conjuntos, ajuste manual, cálculo de remessa e industrialização.
-- Arredondamento automático para kg inteiros.
-- Estoque fiscal de tecido.
-- Módulo de revenda com notas de balcão, rateio e histórico.
-- Login obrigatório (reintroduzido).
+A correção tem duas partes: um painel de conferência e um rateio que olha o que ainda falta.
 
-## Melhorias propostas
+## 1. Nova aba "Cobertura fiscal"
 
-### 1. Monitor de limite MEI em tempo real
-- Mostrar, na aba "Remessa", um card por MEI com:
-  - limite mensal;
-  - total já comprometido no mês (remessas do período + remessas extras);
-  - saldo restante;
-  - alerta visual quando passar de 80% e vermelho quando estourar.
-- Replicar o mesmo alerta no texto da mensagem de WhatsApp.
-- Impacto: evita nota acima do teto do MEI.
+Para o mês escolhido, por empresa · modelo · tamanho:
 
-### 2. Auditoria do arredondamento
-- Toda vez que clicar em "Arredondar", salvar um snapshot com:
-  - data/hora;
-  - quantidade original e arredondada de cada grupo;
-  - kg total antes e depois.
-- Adicionar aba "Histórico de arredondamento" no mês para consultar depois o que foi alterado.
-- Impacto: rastreabilidade fiscal e operacional.
+```text
+Samba Canção — GG
+  RC FITNESS   vendeu 1.822   entrou 1.084   falta 738
+  CR FITNESS   vendeu 27      entrou 16      falta 11
+  COSTA        vendeu 0       entrou 40      sobra 40
+```
 
-### 3. Dashboard comparativo na tela inicial
-- Substituir/acompanhar a lista de meses com um resumo visual simples:
-  - vendas por grupo nos últimos meses (tabela + mini gráfico);
-  - comparação do mês ativo vs mês de referência;
-  - total de remessas por MEI no mês selecionado.
-- Impacto: visão rápida do negócio sem entrar em cada mês.
+- **vendeu**: vendas importadas da planilha do mês (pelo código já confirmado).
+- **entrou**: soma de todos os rateios de ciclos fechados cuja data cai naquele mês.
+- **falta / sobra / ok**, com destaque só para o que está fora do equilíbrio.
+- Totais por empresa e por modelo no topo, além do total geral do mês (vendido x entrado, diferença em peças e em %).
+- Filtro para mostrar apenas as linhas desequilibradas, que é o que interessa na conferência.
 
-### 4. Fechamento / congelamento de mês
-- Botão "Fechar mês" no workspace do período.
-- Após fechado, os dados de vendas e remessa ficam somente leitura, evitando alterações acidentais depois que a nota foi emitida.
-- Pode reabrir com um botão de "Reabrir" se precisar corrigir.
-- Impacto: segurança no processo mensal.
+## 2. Rateio do ciclo passa a distribuir pelo que falta
 
-### 5. Clonar estrutura do mês anterior
-- Ao criar um novo mês, oferecer opção de copiar a estrutura de remessas do mês anterior (empresas + MEI escolhido), sem copiar as quantidades vendidas.
-- Impacto: agilidade na montagem do próximo ciclo.
+O botão de sugestão e o preenchimento automático mudam de critério:
 
-### 6. Registro de pagamento às facções
-- Campo opcional nas remessas: "pago em" + valor pago.
-- Aparece no histórico e pode ser usado para saber quem ainda está com nota em aberto.
-- Impacto: controle financeiro simples.
+1. Calcula, para cada modelo+tamanho, quanto **ainda falta** de nota em cada empresa no mês em curso (vendido no mês de referência − já entrado em ciclos daquele mês).
+2. Distribui as peças da nota primeiro cobrindo esses saldos, na ordem de quem está mais descoberto.
+3. Se sobrarem peças depois de cobrir tudo, o resto vai pela proporção histórica (comportamento atual).
+4. Se nenhuma empresa tem saldo em aberto (ou não há histórico), cai direto na proporção atual — nada regride.
 
-## Ordem de implementação sugerida
-1. Monitor de limite MEI em tempo real.
-2. Auditoria do arredondamento.
-3. Fechamento de mês.
-4. Dashboard comparativo.
-5. Clonar estrutura do mês anterior.
-6. Registro de pagamento às facções.
+Os números continuam inteiros (maiores restos), você continua podendo digitar em cima, e cada linha mostra o saldo em aberto ao lado da referência: `ref.: 1.822 (99%) · falta 738`.
 
-## Escopo inicial recomendado
-Se quiser começar sem encher de recurso, sugiro fazer as três primeiras (1, 2, 3): são rápidas, reduzem risco fiscal e dão mais confiança no fechamento mensal.
+## 3. Aviso na hora de fechar
+
+Antes de fechar o ciclo, um resumo discreto diz se aquela distribuição deixa alguma empresa estourando o vendido do mês (viraria estoque) — aviso, sem bloquear, já que a decisão é sua.
+
+## Detalhes técnicos
+
+- Nova função `resaleCoverage(sales, codeMap, models, allocations, cycles, periodId)` em `src/lib/resale.ts`: devolve vendido, entrado e saldo por empresa+modelo+tamanho, com a mesma dedução de tamanho por descrição já usada em `resaleReference`.
+- `src/routes/_authenticated/revenda.tsx`: nova aba usando essa função; `buildSuggestion` em `Rateio` passa a receber o mapa de saldos e aplica cobertura-primeiro antes do rateio proporcional.
+- Sem mudança de banco: tudo é calculado a partir de `resale_sales`, `resale_code_map`, `resale_cycles` e `resale_cycle_allocations` já existentes; nenhum dado gravado é alterado.
