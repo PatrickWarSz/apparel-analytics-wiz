@@ -136,6 +136,24 @@ function Revenda() {
     [sales, codeMap, referencePeriod, models],
   );
 
+  /** Cobertura fiscal: vendido no mês de referência x entrado nos ciclos daquele mês. */
+  const coverage = useMemo(
+    () =>
+      resaleCoverage({
+        sales,
+        codeMap,
+        models,
+        allocations,
+        cycles,
+        periodId: referencePeriod?.id ?? null,
+        monthLabel: referencePeriod?.label ?? null,
+        companies,
+      }),
+    [sales, codeMap, models, allocations, cycles, referencePeriod, companies],
+  );
+
+
+
 
   const pendingNotes = notes.filter((n) => n.status === "pendente");
   const pendingItems = noteItems.filter((i) => pendingNotes.some((n) => n.id === i.note_id));
