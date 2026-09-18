@@ -1207,3 +1207,137 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+/* ----------------------------- cobertura fiscal ---------------------------- */
+
+function Coverage({
+  rows,
+  monthLabel,
+  cycles,
+}: {
+  rows: CoverageRow[];
+  monthLabel: string | null;
+  cycles: ResaleCycle[];
+}) {
+  const [onlyOff, setOnlyOff] = useState(true);
+
+  const sold = rows.reduce((a, r) => a + r.sold, 0);
+  const entered = rows.reduce((a, r) => a + r.entered, 0);
+  const diff = entered - sold;
+  const pct = sold ? Math.round((entered / sold) * 100) : 0;
+  const cyclesInMonth = cycles.filter((c) => !monthLabel || monthOf(c.closed_on) === monthLabel);
+
+  const byCompany = new Map<string, { name: string; sold: number; entered: number }>();
+  for (const r of rows) {
+    const cur = byCompany.get(r.companyId) ?? { name: r.companyName, sold: 0, entered: 0 };
+    cur.sold += r.sold;
+    cur.entered += r.entered;
+    byCompany.set(r.companyId, cur);
+  }
+
+  const visible = onlyOff ? rows.filter((r) => r.sold !== r.entered) : rows;
+
+  if (!rows.length) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+        Nenhuma venda de revenda importada para comparar. Importe a planilha do mês fechado.
+      </div>
+    );
+  }
+
+  const state = (r: { sold: number; entered: number }) =>
+    r.entered === r.sold ? "ok" : r.entered < r.sold ? `falta ${int(r.sold - r.entered)}` : `sobra ${int(r.entered - r.sold)}`;
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold">
+              Cobertura fiscal {monthLabel ? `· ${monthLabel}` : ""}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Vendido na planilha x entrado em nota nos {cyclesInMonth.length} ciclo(s) do mês.
+            </p>
+          </div>
+          <div className="num flex flex-wrap gap-6 text-sm">
+            <span>
+              vendido <strong className="text-foreground">{int(sold)}</strong>
+            </span>
+            <span>
+              entrou em nota <strong className="text-foreground">{int(entered)}</strong>
+            </span>
+            <span className={diff < 0 ? "text-destructive" : "text-foreground"}>
+              diferença{" "}
+              <strong>
+                {diff > 0 ? "+" : ""}
+                {int(diff)} ({pct}%)
+              </strong>
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+          {[...byCompany.values()]
+            .filter((c) => c.sold || c.entered)
+            .sort((a, b) => b.sold - a.sold)
+            .map((c) => (
+              <div key={c.name} className="rounded border border-border p-3">
+                <p className="text-sm font-bold">{c.name}</p>
+                <p className="num text-xs text-muted-foreground">
+                  vendeu {int(c.sold)} · entrou {int(c.entered)}
+                </p>
+                <Badge className="mt-1" variant={c.sold === c.entered ? "default" : "secondary"}>
+                  {state(c)}
+                </Badge>
+              </div>
+            ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-bold">Por modelo e tamanho</h3>
+          <Button variant="secondary" size="sm" onClick={() => setOnlyOff((v) => !v)}>
+            {onlyOff ? "Mostrar tudo" : "Mostrar só o desequilibrado"}
+          </Button>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Modelo</TableHead>
+              <TableHead>Tam.</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead className="text-right">Vendeu</TableHead>
+              <TableHead className="text-right">Entrou</TableHead>
+              <TableHead className="text-right">Situação</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visible.map((r) => (
+              <TableRow key={`${r.modelId}|${r.size}|${r.companyId}`}>
+                <TableCell className="font-medium">{r.modelName}</TableCell>
+                <TableCell>{r.size || "único"}</TableCell>
+                <TableCell>{r.companyName}</TableCell>
+                <TableCell className="num text-right">{int(r.sold)}</TableCell>
+                <TableCell className="num text-right">{int(r.entered)}</TableCell>
+                <TableCell
+                  className={`num text-right ${r.entered < r.sold ? "text-destructive" : "text-muted-foreground"}`}
+                >
+                  {state(r)}
+                </TableCell>
+              </TableRow>
+            ))}
+            {!visible.length && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
+                  Tudo equilibrado neste mês.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </section>
+    </div>
+  );
+}
