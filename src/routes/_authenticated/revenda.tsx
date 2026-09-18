@@ -180,6 +180,7 @@ function Revenda() {
         <TabsList>
           <TabsTrigger value="notas">Notas de balcão ({pendingNotes.length})</TabsTrigger>
           <TabsTrigger value="rateio">Rateio do ciclo</TabsTrigger>
+          <TabsTrigger value="cobertura">Cobertura fiscal</TabsTrigger>
           <TabsTrigger value="codigos">
             Códigos a confirmar{unmapped.length ? ` (${unmapped.length})` : ""}
           </TabsTrigger>
@@ -203,10 +204,19 @@ function Revenda() {
             pendingItems={pendingItems}
             pendingNoteIds={pendingNotes.map((n) => n.id)}
             reference={reference}
+            deficit={coverage.deficit}
             referenceLabel={referencePeriod?.label ?? null}
             onClosed={() =>
               refresh(["counter_notes", "counter_note_items", "resale_cycles", "resale_allocations"])
             }
+          />
+        </TabsContent>
+
+        <TabsContent value="cobertura" className="pt-4">
+          <Coverage
+            rows={coverage.rows}
+            monthLabel={referencePeriod?.label ?? null}
+            cycles={cycles}
           />
         </TabsContent>
 
