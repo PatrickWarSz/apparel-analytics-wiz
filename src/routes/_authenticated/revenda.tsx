@@ -664,6 +664,17 @@ function Rateio({
     models,
   );
 
+  /** Empresas que, nesta distribuição, receberiam mais nota do que venderam no mês. */
+  const excess = companies
+    .map((c) => ({
+      name: c.name,
+      qty: rows.reduce((acc, r) => {
+        const falta = openBalance(r.modelId, r.size)?.get(c.id) ?? 0;
+        return acc + Math.max(0, val(key(r.modelId, r.size, c.id)) - falta);
+      }, 0),
+    }))
+    .filter((e) => e.qty > 0);
+
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
