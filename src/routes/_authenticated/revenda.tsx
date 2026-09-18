@@ -677,7 +677,7 @@ function Rateio({
             </p>
           </div>
           <Button variant="secondary" onClick={suggest}>
-            <Wand2 className="size-4" /> Sugerir pela referência
+            <Wand2 className="size-4" /> Sugerir pelo saldo em aberto
           </Button>
         </div>
 
@@ -710,6 +710,7 @@ function Rateio({
                 <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {companies.map((c) => {
                     const ref = per?.get(c.id);
+                    const falta = openBalance(r.modelId, r.size)?.get(c.id) ?? 0;
                     const k = key(r.modelId, r.size, c.id);
                     return (
                       <div key={c.id} className="flex items-center gap-2">
@@ -724,6 +725,7 @@ function Rateio({
                           {ref
                             ? `ref.: ${int(ref)} vendidas (${Math.round((ref / (total || 1)) * 100)}%)`
                             : "sem histórico"}
+                          {falta > 0 ? ` · falta ${int(falta)}` : ""}
                         </span>
                       </div>
                     );
