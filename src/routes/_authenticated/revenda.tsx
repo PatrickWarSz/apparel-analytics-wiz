@@ -24,11 +24,15 @@ import {
   guessModel,
   guessSize,
   norm,
+  monthOf,
   refKey,
+  resaleCoverage,
   resaleReference,
   type CounterNote,
   type CounterNoteItem,
+  type CoverageRow,
   type ResaleAllocation,
+  type ResaleCycle,
   type ResaleModel,
 } from "@/lib/resale";
 import { friendlyError } from "@/lib/dbError";
