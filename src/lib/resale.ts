@@ -192,3 +192,95 @@ export function resaleReference(
 
 export const refKey = (modelId: string, size: string) => `${modelId}|${norm(size)}`;
 
+
+/* ---------------------------- cobertura fiscal ---------------------------- */
+
+export type CoverageRow = {
+  modelId: string;
+  modelName: string;
+  size: string;
+  companyId: string;
+  companyName: string;
+  sold: number;
+  entered: number;
+};
+
+/** "2026-08-19" -> "08/2026" */
+export const monthOf = (isoDate: string) => {
+  const [y, m] = String(isoDate).split("-");
+  return m && y ? `${m}/${y}` : "";
+};
+
+/**
+ * Compara, por empresa · modelo · tamanho, quanto foi VENDIDO no período de
+ * referência com quanto ENTROU em nota (rateios dos ciclos fechados no mês).
+ * O saldo (vendido − entrado) é o que ainda falta cobrir fiscalmente.
+ */
+export function resaleCoverage(args: {
+  sales: ResaleSale[];
+  codeMap: ResaleCodeMap[];
+  models: ResaleModel[];
+  allocations: ResaleAllocation[];
+  cycles: ResaleCycle[];
+  periodId: string | null;
+  monthLabel: string | null;
+  companies: Array<{ id: string; name: string }>;
+}) {
+  const { sales, codeMap, models, allocations, cycles, periodId, monthLabel, companies } = args;
+
+  const sold = resaleReference(sales, codeMap, periodId, models);
+
+  const cycleIds = new Set(
+    cycles.filter((c) => !monthLabel || monthOf(c.closed_on) === monthLabel).map((c) => c.id),
+  );
+  const entered = new Map<string, Map<string, number>>();
+  for (const a of allocations) {
+    if (!a.model_id || !a.company_id || !cycleIds.has(a.cycle_id)) continue;
+    const k = refKey(a.model_id, a.size);
+    const per = entered.get(k) ?? new Map<string, number>();
+    per.set(a.company_id, (per.get(a.company_id) ?? 0) + a.qty);
+    entered.set(k, per);
+  }
+
+  const keys = new Set([...sold.keys(), ...entered.keys()]);
+  const rows: CoverageRow[] = [];
+  const deficit = new Map<string, Map<string, number>>();
+
+  for (const k of keys) {
+    const [modelId, size] = k.split("|");
+    const model = models.find((m) => m.id === modelId);
+    const soldPer = sold.get(k);
+    const enteredPer = entered.get(k);
+    const per = new Map<string, number>();
+    const ids = new Set([...(soldPer?.keys() ?? []), ...(enteredPer?.keys() ?? [])]);
+    for (const cid of ids) {
+      const s = soldPer?.get(cid) ?? 0;
+      const e = enteredPer?.get(cid) ?? 0;
+      if (!s && !e) continue;
+      rows.push({
+        modelId,
+        modelName: model?.name ?? "—",
+        size,
+        companyId: cid,
+        companyName: companies.find((c) => c.id === cid)?.name ?? "—",
+        sold: s,
+        entered: e,
+      });
+      if (s - e > 0) per.set(cid, s - e);
+    }
+    if (per.size) deficit.set(k, per);
+  }
+
+  rows.sort((a, b) => {
+    const ma = models.find((m) => m.id === a.modelId);
+    const mb = models.find((m) => m.id === b.modelId);
+    if ((ma?.sort_order ?? 999) !== (mb?.sort_order ?? 999))
+      return (ma?.sort_order ?? 999) - (mb?.sort_order ?? 999);
+    const sa = ma?.sizes.indexOf(a.size) ?? -1;
+    const sb = mb?.sizes.indexOf(b.size) ?? -1;
+    if (sa !== sb) return sa - sb;
+    return b.sold - a.sold;
+  });
+
+  return { rows, deficit };
+}
