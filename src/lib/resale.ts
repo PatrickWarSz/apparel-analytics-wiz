@@ -247,7 +247,7 @@ export function resaleCoverage(args: {
   const deficit = new Map<string, Map<string, number>>();
 
   for (const k of keys) {
-    const [modelId, size] = k.split("|");
+    const [modelId = "", size = ""] = k.split("|");
     const model = models.find((m) => m.id === modelId);
     const soldPer = sold.get(k);
     const enteredPer = entered.get(k);
