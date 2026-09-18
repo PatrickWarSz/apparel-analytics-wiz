@@ -24,11 +24,15 @@ import {
   guessModel,
   guessSize,
   norm,
+  monthOf,
   refKey,
+  resaleCoverage,
   resaleReference,
   type CounterNote,
   type CounterNoteItem,
+  type CoverageRow,
   type ResaleAllocation,
+  type ResaleCycle,
   type ResaleModel,
 } from "@/lib/resale";
 import { friendlyError } from "@/lib/dbError";
@@ -132,6 +136,24 @@ function Revenda() {
     [sales, codeMap, referencePeriod, models],
   );
 
+  /** Cobertura fiscal: vendido no mês de referência x entrado nos ciclos daquele mês. */
+  const coverage = useMemo(
+    () =>
+      resaleCoverage({
+        sales,
+        codeMap,
+        models,
+        allocations,
+        cycles,
+        periodId: referencePeriod?.id ?? null,
+        monthLabel: referencePeriod?.label ?? null,
+        companies,
+      }),
+    [sales, codeMap, models, allocations, cycles, referencePeriod, companies],
+  );
+
+
+
 
   const pendingNotes = notes.filter((n) => n.status === "pendente");
   const pendingItems = noteItems.filter((i) => pendingNotes.some((n) => n.id === i.note_id));
@@ -158,6 +180,7 @@ function Revenda() {
         <TabsList>
           <TabsTrigger value="notas">Notas de balcão ({pendingNotes.length})</TabsTrigger>
           <TabsTrigger value="rateio">Rateio do ciclo</TabsTrigger>
+          <TabsTrigger value="cobertura">Cobertura fiscal</TabsTrigger>
           <TabsTrigger value="codigos">
             Códigos a confirmar{unmapped.length ? ` (${unmapped.length})` : ""}
           </TabsTrigger>
@@ -181,10 +204,19 @@ function Revenda() {
             pendingItems={pendingItems}
             pendingNoteIds={pendingNotes.map((n) => n.id)}
             reference={reference}
+            deficit={coverage.deficit}
             referenceLabel={referencePeriod?.label ?? null}
             onClosed={() =>
               refresh(["counter_notes", "counter_note_items", "resale_cycles", "resale_allocations"])
             }
+          />
+        </TabsContent>
+
+        <TabsContent value="cobertura" className="pt-4">
+          <Coverage
+            rows={coverage.rows}
+            monthLabel={referencePeriod?.label ?? null}
+            cycles={cycles}
           />
         </TabsContent>
 
@@ -418,6 +450,7 @@ function Rateio({
   pendingItems,
   pendingNoteIds,
   reference,
+  deficit,
   referenceLabel,
   onClosed,
 }: {
@@ -425,6 +458,7 @@ function Rateio({
   companies: Company[];
   pendingItems: CounterNoteItem[];
   pendingNoteIds: string[];
+  deficit: Map<string, Map<string, number>>;
   reference: Map<string, Map<string, number>>;
   referenceLabel: string | null;
   onClosed: () => void;
@@ -466,42 +500,72 @@ function Rateio({
     return map;
   }, [models, reference]);
 
-  /** Distribui as peças proporcionalmente à referência (maiores restos). */
+  /** Saldo em aberto (vendido − já entrado em nota no mês) por modelo+tamanho. */
+  const openBalance = (modelId: string, size: string) => deficit.get(refKey(modelId, size));
+
+  /**
+   * Cobre primeiro quem ainda está com nota atrasada (vendeu mais do que entrou)
+   * e só depois distribui o que sobrar pela proporção histórica.
+   */
   const buildSuggestion = () => {
     const next: Record<string, string> = {};
     for (const r of rows) {
-      const per = reference.get(refKey(r.modelId, r.size)) ?? modelReference.get(r.modelId);
-      const total = per ? [...per.values()].reduce((a, b) => a + b, 0) : 0;
-      if (!total) continue;
-      const parts = companies.map((c) => {
-        const exact = ((per?.get(c.id) ?? 0) / total) * r.qty;
-        return { c, base: Math.floor(exact), rest: exact - Math.floor(exact) };
-      });
-      let left = r.qty - parts.reduce((a, p) => a + p.base, 0);
-      for (const p of [...parts].sort((a, b) => b.rest - a.rest)) {
-        if (left <= 0) break;
-        p.base += 1;
-        left -= 1;
+      const result = new Map<string, number>();
+      let left = r.qty;
+
+      const need = openBalance(r.modelId, r.size);
+      if (need) {
+        for (const [cid, qty] of [...need.entries()].sort((a, b) => b[1] - a[1])) {
+          if (left <= 0) break;
+          if (!companies.some((c) => c.id === cid)) continue;
+          const take = Math.min(left, qty);
+          result.set(cid, (result.get(cid) ?? 0) + take);
+          left -= take;
+        }
       }
-      for (const p of parts) if (p.base > 0) next[key(r.modelId, r.size, p.c.id)] = String(p.base);
+
+      if (left > 0) {
+        const per = reference.get(refKey(r.modelId, r.size)) ?? modelReference.get(r.modelId);
+        const total = per ? [...per.values()].reduce((a, b) => a + b, 0) : 0;
+        if (total) {
+          const remaining = left;
+          const parts = companies.map((c) => {
+            const exact = ((per?.get(c.id) ?? 0) / total) * remaining;
+            return { c, base: Math.floor(exact), rest: exact - Math.floor(exact) };
+          });
+          left = remaining - parts.reduce((a, p) => a + p.base, 0);
+          for (const p of [...parts].sort((a, b) => b.rest - a.rest)) {
+            if (left <= 0) break;
+            p.base += 1;
+            left -= 1;
+          }
+          for (const p of parts)
+            if (p.base > 0) result.set(p.c.id, (result.get(p.c.id) ?? 0) + p.base);
+        }
+      }
+
+      for (const [cid, qty] of result)
+        if (qty > 0) next[key(r.modelId, r.size, cid)] = String(qty);
     }
     return next;
   };
 
   const suggest = () => {
     setAlloc(buildSuggestion());
-    toast.success("Sugestão preenchida pela referência");
+    toast.success("Sugestão preenchida pelo saldo em aberto");
   };
 
   /** Preenche sozinho assim que houver notas pendentes e referência disponível. */
   const autoFilled = useRef("");
   useEffect(() => {
-    const sig = rows.map((r) => `${r.modelId}|${r.size}|${r.qty}`).join(";") + `#${reference.size}`;
+    const sig =
+      rows.map((r) => `${r.modelId}|${r.size}|${r.qty}`).join(";") +
+      `#${reference.size}#${deficit.size}`;
     if (!rows.length || !reference.size || autoFilled.current === sig) return;
     autoFilled.current = sig;
     setAlloc(buildSuggestion());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, reference, companies, models]);
+  }, [rows, reference, deficit, companies, models]);
 
 
   const close = useMutation({
@@ -600,6 +664,17 @@ function Rateio({
     models,
   );
 
+  /** Empresas que, nesta distribuição, receberiam mais nota do que venderam no mês. */
+  const excess = companies
+    .map((c) => ({
+      name: c.name,
+      qty: rows.reduce((acc, r) => {
+        const falta = openBalance(r.modelId, r.size)?.get(c.id) ?? 0;
+        return acc + Math.max(0, val(key(r.modelId, r.size, c.id)) - falta);
+      }, 0),
+    }))
+    .filter((e) => e.qty > 0);
+
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
@@ -613,7 +688,7 @@ function Rateio({
             </p>
           </div>
           <Button variant="secondary" onClick={suggest}>
-            <Wand2 className="size-4" /> Sugerir pela referência
+            <Wand2 className="size-4" /> Sugerir pelo saldo em aberto
           </Button>
         </div>
 
@@ -646,6 +721,7 @@ function Rateio({
                 <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {companies.map((c) => {
                     const ref = per?.get(c.id);
+                    const falta = openBalance(r.modelId, r.size)?.get(c.id) ?? 0;
                     const k = key(r.modelId, r.size, c.id);
                     return (
                       <div key={c.id} className="flex items-center gap-2">
@@ -660,6 +736,7 @@ function Rateio({
                           {ref
                             ? `ref.: ${int(ref)} vendidas (${Math.round((ref / (total || 1)) * 100)}%)`
                             : "sem histórico"}
+                          {falta > 0 ? ` · falta ${int(falta)}` : ""}
                         </span>
                       </div>
                     );
@@ -670,9 +747,17 @@ function Rateio({
           })}
         </div>
 
-        <Button className="mt-5" onClick={() => close.mutate()} disabled={close.isPending}>
-          Fechar ciclo e gerar mensagem
-        </Button>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Button onClick={() => close.mutate()} disabled={close.isPending}>
+            Fechar ciclo e gerar mensagem
+          </Button>
+          {excess.length > 0 && (
+            <span className="num text-xs text-muted-foreground">
+              acima do vendido:{" "}
+              {excess.map((e) => `${e.name} +${int(e.qty)}`).join(" · ")} (vira estoque)
+            </span>
+          )}
+        </div>
       </section>
 
       {preview && <MessageBlock title="Prévia da mensagem" text={preview} />}
@@ -1119,6 +1204,140 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="text-xs font-semibold uppercase text-muted-foreground">{label}</label>
       <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+/* ----------------------------- cobertura fiscal ---------------------------- */
+
+function Coverage({
+  rows,
+  monthLabel,
+  cycles,
+}: {
+  rows: CoverageRow[];
+  monthLabel: string | null;
+  cycles: ResaleCycle[];
+}) {
+  const [onlyOff, setOnlyOff] = useState(true);
+
+  const sold = rows.reduce((a, r) => a + r.sold, 0);
+  const entered = rows.reduce((a, r) => a + r.entered, 0);
+  const diff = entered - sold;
+  const pct = sold ? Math.round((entered / sold) * 100) : 0;
+  const cyclesInMonth = cycles.filter((c) => !monthLabel || monthOf(c.closed_on) === monthLabel);
+
+  const byCompany = new Map<string, { name: string; sold: number; entered: number }>();
+  for (const r of rows) {
+    const cur = byCompany.get(r.companyId) ?? { name: r.companyName, sold: 0, entered: 0 };
+    cur.sold += r.sold;
+    cur.entered += r.entered;
+    byCompany.set(r.companyId, cur);
+  }
+
+  const visible = onlyOff ? rows.filter((r) => r.sold !== r.entered) : rows;
+
+  if (!rows.length) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+        Nenhuma venda de revenda importada para comparar. Importe a planilha do mês fechado.
+      </div>
+    );
+  }
+
+  const state = (r: { sold: number; entered: number }) =>
+    r.entered === r.sold ? "ok" : r.entered < r.sold ? `falta ${int(r.sold - r.entered)}` : `sobra ${int(r.entered - r.sold)}`;
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold">
+              Cobertura fiscal {monthLabel ? `· ${monthLabel}` : ""}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Vendido na planilha x entrado em nota nos {cyclesInMonth.length} ciclo(s) do mês.
+            </p>
+          </div>
+          <div className="num flex flex-wrap gap-6 text-sm">
+            <span>
+              vendido <strong className="text-foreground">{int(sold)}</strong>
+            </span>
+            <span>
+              entrou em nota <strong className="text-foreground">{int(entered)}</strong>
+            </span>
+            <span className={diff < 0 ? "text-destructive" : "text-foreground"}>
+              diferença{" "}
+              <strong>
+                {diff > 0 ? "+" : ""}
+                {int(diff)} ({pct}%)
+              </strong>
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+          {[...byCompany.values()]
+            .filter((c) => c.sold || c.entered)
+            .sort((a, b) => b.sold - a.sold)
+            .map((c) => (
+              <div key={c.name} className="rounded border border-border p-3">
+                <p className="text-sm font-bold">{c.name}</p>
+                <p className="num text-xs text-muted-foreground">
+                  vendeu {int(c.sold)} · entrou {int(c.entered)}
+                </p>
+                <Badge className="mt-1" variant={c.sold === c.entered ? "default" : "secondary"}>
+                  {state(c)}
+                </Badge>
+              </div>
+            ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-bold">Por modelo e tamanho</h3>
+          <Button variant="secondary" size="sm" onClick={() => setOnlyOff((v) => !v)}>
+            {onlyOff ? "Mostrar tudo" : "Mostrar só o desequilibrado"}
+          </Button>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Modelo</TableHead>
+              <TableHead>Tam.</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead className="text-right">Vendeu</TableHead>
+              <TableHead className="text-right">Entrou</TableHead>
+              <TableHead className="text-right">Situação</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visible.map((r) => (
+              <TableRow key={`${r.modelId}|${r.size}|${r.companyId}`}>
+                <TableCell className="font-medium">{r.modelName}</TableCell>
+                <TableCell>{r.size || "único"}</TableCell>
+                <TableCell>{r.companyName}</TableCell>
+                <TableCell className="num text-right">{int(r.sold)}</TableCell>
+                <TableCell className="num text-right">{int(r.entered)}</TableCell>
+                <TableCell
+                  className={`num text-right ${r.entered < r.sold ? "text-destructive" : "text-muted-foreground"}`}
+                >
+                  {state(r)}
+                </TableCell>
+              </TableRow>
+            ))}
+            {!visible.length && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
+                  Tudo equilibrado neste mês.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </section>
     </div>
   );
 }
