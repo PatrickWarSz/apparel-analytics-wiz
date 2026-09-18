@@ -736,9 +736,17 @@ function Rateio({
           })}
         </div>
 
-        <Button className="mt-5" onClick={() => close.mutate()} disabled={close.isPending}>
-          Fechar ciclo e gerar mensagem
-        </Button>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Button onClick={() => close.mutate()} disabled={close.isPending}>
+            Fechar ciclo e gerar mensagem
+          </Button>
+          {excess.length > 0 && (
+            <span className="num text-xs text-muted-foreground">
+              acima do vendido:{" "}
+              {excess.map((e) => `${e.name} +${int(e.qty)}`).join(" · ")} (vira estoque)
+            </span>
+          )}
+        </div>
       </section>
 
       {preview && <MessageBlock title="Prévia da mensagem" text={preview} />}
