@@ -145,11 +145,15 @@ function Revenda() {
         models,
         allocations,
         cycles,
-        periodId: referencePeriod?.id ?? null,
-        monthLabel: referencePeriod?.label ?? null,
+        periodId: null,
+        // Acumulado: todo mês importado x todos os ciclos já fechados. As notas do
+        // balcão entram com atraso (compro no mês seguinte ao que vendi), então
+        // recortar por mês mostrava falta onde a nota já existe.
+        periodIds: periods.filter((p) => sales.some((s) => s.period_id === p.id)).map((p) => p.id),
+        monthLabel: null,
         companies,
       }),
-    [sales, codeMap, models, allocations, cycles, referencePeriod, companies],
+    [sales, codeMap, models, allocations, cycles, periods, companies],
   );
 
 
