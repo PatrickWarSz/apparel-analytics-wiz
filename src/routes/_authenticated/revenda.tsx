@@ -217,11 +217,7 @@ function Revenda() {
         </TabsContent>
 
         <TabsContent value="cobertura" className="pt-4">
-          <Coverage
-            rows={coverage.rows}
-            monthLabel={referencePeriod?.label ?? null}
-            cycles={cycles}
-          />
+          <Coverage rows={coverage.rows} monthLabel={null} cycles={cycles} />
         </TabsContent>
 
         <TabsContent value="codigos" className="pt-4">
@@ -1258,10 +1254,11 @@ function Coverage({
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold">
-              Cobertura fiscal {monthLabel ? `· ${monthLabel}` : ""}
+              Cobertura fiscal {monthLabel ? `· ${monthLabel}` : "· acumulado"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Vendido na planilha x entrado em nota nos {cyclesInMonth.length} ciclo(s) do mês.
+              Tudo que foi vendido nas planilhas importadas x tudo que entrou em nota nos{" "}
+              {cyclesInMonth.length} ciclo(s) já fechados.
             </p>
           </div>
           <div className="num flex flex-wrap gap-6 text-sm">
