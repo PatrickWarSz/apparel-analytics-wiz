@@ -222,13 +222,25 @@ export function resaleCoverage(args: {
   models: ResaleModel[];
   allocations: ResaleAllocation[];
   cycles: ResaleCycle[];
+  /** Um período específico; se `periodIds` vier preenchido, soma todos eles. */
   periodId: string | null;
+  periodIds?: string[] | null;
+  /** Se nulo, considera TODOS os ciclos (visão acumulada). */
   monthLabel: string | null;
   companies: Array<{ id: string; name: string }>;
 }) {
-  const { sales, codeMap, models, allocations, cycles, periodId, monthLabel, companies } = args;
+  const { sales, codeMap, models, allocations, cycles, periodId, periodIds, monthLabel, companies } =
+    args;
 
-  const sold = resaleReference(sales, codeMap, periodId, models);
+  const ids = periodIds?.length ? periodIds : periodId ? [periodId] : [];
+  const sold = new Map<string, Map<string, number>>();
+  for (const pid of ids) {
+    for (const [k, per] of resaleReference(sales, codeMap, pid, models)) {
+      const acc = sold.get(k) ?? new Map<string, number>();
+      for (const [cid, qty] of per) acc.set(cid, (acc.get(cid) ?? 0) + qty);
+      sold.set(k, acc);
+    }
+  }
 
   const cycleIds = new Set(
     cycles.filter((c) => !monthLabel || monthOf(c.closed_on) === monthLabel).map((c) => c.id),

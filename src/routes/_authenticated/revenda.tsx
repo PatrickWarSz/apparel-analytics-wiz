@@ -145,11 +145,15 @@ function Revenda() {
         models,
         allocations,
         cycles,
-        periodId: referencePeriod?.id ?? null,
-        monthLabel: referencePeriod?.label ?? null,
+        periodId: null,
+        // Acumulado: todo mês importado x todos os ciclos já fechados. As notas do
+        // balcão entram com atraso (compro no mês seguinte ao que vendi), então
+        // recortar por mês mostrava falta onde a nota já existe.
+        periodIds: periods.filter((p) => sales.some((s) => s.period_id === p.id)).map((p) => p.id),
+        monthLabel: null,
         companies,
       }),
-    [sales, codeMap, models, allocations, cycles, referencePeriod, companies],
+    [sales, codeMap, models, allocations, cycles, periods, companies],
   );
 
 
@@ -213,11 +217,7 @@ function Revenda() {
         </TabsContent>
 
         <TabsContent value="cobertura" className="pt-4">
-          <Coverage
-            rows={coverage.rows}
-            monthLabel={referencePeriod?.label ?? null}
-            cycles={cycles}
-          />
+          <Coverage rows={coverage.rows} monthLabel={null} cycles={cycles} />
         </TabsContent>
 
         <TabsContent value="codigos" className="pt-4">
@@ -1254,10 +1254,11 @@ function Coverage({
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold">
-              Cobertura fiscal {monthLabel ? `· ${monthLabel}` : ""}
+              Cobertura fiscal {monthLabel ? `· ${monthLabel}` : "· acumulado"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Vendido na planilha x entrado em nota nos {cyclesInMonth.length} ciclo(s) do mês.
+              Tudo que foi vendido nas planilhas importadas x tudo que entrou em nota nos{" "}
+              {cyclesInMonth.length} ciclo(s) já fechados.
             </p>
           </div>
           <div className="num flex flex-wrap gap-6 text-sm">
@@ -1331,7 +1332,7 @@ function Coverage({
             {!visible.length && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
-                  Tudo equilibrado neste mês.
+                  Tudo equilibrado.
                 </TableCell>
               </TableRow>
             )}
