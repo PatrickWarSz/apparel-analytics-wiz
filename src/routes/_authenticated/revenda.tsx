@@ -1332,7 +1332,7 @@ function Coverage({
             {!visible.length && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
-                  Tudo equilibrado neste mês.
+                  Tudo equilibrado.
                 </TableCell>
               </TableRow>
             )}
